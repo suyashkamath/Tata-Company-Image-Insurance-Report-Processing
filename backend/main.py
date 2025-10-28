@@ -520,7 +520,7 @@ app = FastAPI(title="Insurance Policy Processing System")
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://tata-image-report.vercel.app"],  # Your frontend
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
