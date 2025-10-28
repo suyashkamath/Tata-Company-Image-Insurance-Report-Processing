@@ -1,4 +1,483 @@
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException
+# from fastapi import FastAPI, File, UploadFile, Form
+# from fastapi.responses import JSONResponse, HTMLResponse
+# from fastapi.middleware.cors import CORSMiddleware
+# from io import BytesIO
+# import base64
+# import json
+# import os
+# from dotenv import load_dotenv
+# import logging
+# import re
+# import pandas as pd
+# from openai import OpenAI
+# from pathlib import Path
+
+# # Configure logging
+# logging.basicConfig(
+#     level=logging.INFO,
+#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+# )
+# logger = logging.getLogger(__name__)
+
+# # Load environment variables
+# load_dotenv()
+
+# # Load OpenAI API key
+# OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+# if not OPENAI_API_KEY:
+#     logger.error("⚠️ OPENAI_API_KEY environment variable not set")
+#     raise RuntimeError("OPENAI_API_KEY environment variable not set")
+
+# # Initialize OpenAI client
+# try:
+#     client = OpenAI(api_key=OPENAI_API_KEY)
+#     logger.info("✅ OpenAI client initialized successfully")
+# except Exception as e:
+#     logger.error(f"❌ Failed to initialize OpenAI client: {str(e)}")
+#     raise RuntimeError(f"Failed to initialize OpenAI client: {str(e)}")
+
+# app = FastAPI(title="Insurance Policy Processing System")
+
+# # Add CORS middleware
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["*"],
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
+
+# # Simplified Formula Data - Only for ICICI
+
+# FORMULA_DATA = [
+#     {"LOB": "TW", "SEGMENT": "1+5", "INSURER": "TATA", "PO": "90% of Payin", "REMARKS": "NIL"},
+
+#     {"LOB": "TW", "SEGMENT": "TW SAOD + COMP", "INSURER": "TATA", "PO": "90% of Payin", "REMARKS": "NIL"},
+
+
+
+    
+#     {"LOB": "TW", "SEGMENT": "TW TP", "INSURER": "TATA", "PO": "-2%", "REMARKS": "Payin Below 20%"},
+#     {"LOB": "TW", "SEGMENT": "TW TP", "INSURER": "TATA", "PO": "-3%", "REMARKS": "Payin 21% to 30%"},
+#     {"LOB": "TW", "SEGMENT": "TW TP", "INSURER": "TATA", "PO": "-4%", "REMARKS": "Payin 31% to 50%"},
+#     {"LOB": "TW", "SEGMENT": "TW TP", "INSURER": "TATA", "PO": "-5%", "REMARKS": "Payin Above 50%"},
+
+
+#     {"LOB": "PVT CAR", "SEGMENT": "PVT CAR COMP + SAOD", "INSURER": "TATA", "PO": "90% of Payin", "REMARKS": "Payin Below 20"},
+#     {"LOB": "PVT CAR", "SEGMENT": "PVT CAR COMP + SAOD", "INSURER": "TATA", "PO": "90% of Payin", "REMARKS": "Payin Above 20%"},
+#     {"LOB": "PVT CAR", "SEGMENT": "PVT CAR COMP + SAOD", "INSURER": "TATA", "PO": "90% of Payin", "REMARKS": "Payin Above 30%"},
+#     {"LOB": "PVT CAR", "SEGMENT": "PVT CAR COMP + SAOD", "INSURER": "TATA", "PO": "90% of Payin", "REMARKS": "Payin Above 40%"},
+#     {"LOB": "PVT CAR", "SEGMENT": "PVT CAR COMP + SAOD", "INSURER": "TATA", "PO": "90% of Payin", "REMARKS": "Payin Above 50%"},
+
+#     {"LOB": "PVT CAR", "SEGMENT": "PVT CAR TP", "INSURER": "TATA", "PO": "90% of Payin", "REMARKS": "Payin Below 20%"},
+#       {"LOB": "PVT CAR", "SEGMENT": "PVT CAR TP", "INSURER": "TATA", "PO": "90% of Payin", "REMARKS": "Payin Above 20%"},
+#         {"LOB": "PVT CAR", "SEGMENT": "PVT CAR TP", "INSURER": "TATA", "PO": "90% of Payin", "REMARKS": "Payin Above 30%"},
+#           {"LOB": "PVT CAR", "SEGMENT": "PVT CAR TP", "INSURER": "TATA", "PO": "90% of Payin", "REMARKS": "Payin Above 40%"},
+#             {"LOB": "PVT CAR", "SEGMENT": "PVT CAR TP", "INSURER": "TATA", "PO": "90% of Payin", "REMARKS": "Payin Above 50%"},
+
+
+
+  
+
+#     {"LOB": "CV", "SEGMENT": "All GVW & PCV 3W, GCV 3W", "INSURER": "TATA", "PO": "-2%", "REMARKS": "Payin Below 20%"},
+#     {"LOB": "CV", "SEGMENT": "All GVW & PCV 3W, GCV 3W", "INSURER": "TATA", "PO": "-3%", "REMARKS": "Payin 21% to 30%"},
+#     {"LOB": "CV", "SEGMENT": "All GVW & PCV 3W, GCV 3W", "INSURER": "TATA", "PO": "-4%", "REMARKS": "Payin 31% to 50%"},
+#     {"LOB": "CV", "SEGMENT": "All GVW & PCV 3W, GCV 3W", "INSURER": "TATA", "PO": "-5%", "REMARKS": "Payin Above 50%"},
+
+
+#     {"LOB": "BUS", "SEGMENT": "SCHOOL BUS", "INSURER": "TATA", "PO": "Less 2% of Payin", "REMARKS": "NIL"},
+
+#     {"LOB": "BUS", "SEGMENT": "STAFF BUS", "INSURER": "TATA", "PO": "88% of Payin", "REMARKS": "NIL"},
+
+
+#     {"LOB": "TAXI", "SEGMENT": "TAXI", "INSURER": "TATA", "PO": "-2%", "REMARKS": "Payin Below 20%"},
+#     {"LOB": "TAXI", "SEGMENT": "TAXI", "INSURER": "TATA", "PO": "-3%", "REMARKS": "Payin 21% to 30%"},
+#     {"LOB": "TAXI", "SEGMENT": "TAXI", "INSURER": "TATA", "PO": "-4%", "REMARKS": "Payin 31% to 50%"},
+#     {"LOB": "TAXI", "SEGMENT": "TAXI", "INSURER": "TATA", "PO": "-5%", "REMARKS": "Payin Above 50%"},
+
+
+
+#     {"LOB": "MISD", "SEGMENT": "Misd, Tractor", "INSURER": "TATA", "PO": "88% of Payin", "REMARKS": "NIL"}
+# ]
+
+# def extract_text_from_file(file_bytes: bytes, filename: str, content_type: str) -> str:
+#     """Extract text from uploaded image file using GPT-4o"""
+#     file_extension = filename.split('.')[-1].lower() if '.' in filename else ''
+    
+#     if file_extension not in ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff'] and not content_type.startswith('image/'):
+#         raise ValueError(f"Unsupported file type: {filename}")
+    
+#     try:
+#         image_base64 = base64.b64encode(file_bytes).decode('utf-8')
+        
+#         prompt = """
+# You are extracting insurance policy data from an image. Return a JSON array with these exact keys: segment, policy_type, location, payin, remark.
+
+# STEP-BY-STEP EXTRACTION:
+
+# STEP 1: Identify the vehicle/policy category
+# - 2W, MC, MCY, SC, Scooter, EV → TWO WHEELER
+# - PVT CAR, Car, PCI → PRIVATE CAR  
+# - CV, GVW, PCV, GCV, tonnage → COMMERCIAL VEHICLE
+# - Bus → BUS
+# - Taxi → TAXI
+# - Tractor, Ambulance, Misd → MISCELLANEOUS
+
+# STEP 2: Identify policy type from columns
+# - 1+1 column = Comp
+# - SATP column = TP
+# - If both exist, create TWO separate records
+
+# STEP 3: Map to EXACT segment (MANDATORY):
+
+# TWO WHEELER:
+#   IF 1+1 OR Comp OR SAOD → segment = "TW SAOD + COMP"
+#   IF SATP OR TP → segment = "TW TP"
+#   IF New/Fresh/1+5 → segment = "1+5"
+#   NEVER use "2W", "MC", "Scooter" as segment
+
+# PRIVATE CAR:
+#   IF 1+1 OR Comp OR SAOD → segment = "PVT CAR COMP + SAOD"
+#   IF SATP OR TP → segment = "PVT CAR TP"
+#   and 4W means 4 wheeler means Private Car 
+
+# COMMERCIAL VEHICLE:
+#   ALWAYS → segment = "All GVW & PCV 3W, GCV 3W"
+#   (Digit treats all CV the same regardless of tonnage)
+
+# BUS:
+#   IF School → segment = "SCHOOL BUS"
+#   ELSE → segment = "STAFF BUS"
+
+# TAXI:
+#   segment = "TAXI"
+
+# MISCELLANEOUS:
+#   segment = "Misd, Tractor"
+
+# STEP 4: Extract other fields
+# - policy_type: "Comp" or "TP"
+# - location: Cluster/Agency name
+# - payin: ONLY CD2 value as NUMBER (ignore CD1)
+# - remark: Additional details as STRING
+
+# CRITICAL RULES:
+# - payin must be numeric (63.0 not "63.0%")
+# - Create separate records if both 1+1 and SATP columns exist
+# - NEVER use raw names like "2W" in segment
+# - Handle negative % as positive
+
+# --- TATA-AIG CV GRID OVERRIDE (APPLY ONLY IF "TATA" OR "Forwarded" IS VISIBLE) ---
+# IF the image contains the word **TATA**, **Forwarded**, or a grid titled "Grid Applicable for June 25":
+
+
+# 2. Extract **EVERY ROW** in the table as a **separate JSON record**.
+# 3. For **segment** use the exact tonnage/type shown  it comes under segment "All GVW & PCV 3W, GCV 3W". 
+#    - "2.5–3.5 T"             → "All GVW & PCV 3W, GCV 3W"
+#    - "<2.5 T"                →"All GVW & PCV 3W, GCV 3W"
+#    - "3.5–12 T"              →"All GVW & PCV 3W, GCV 3W"
+#    - "PCV 3W"                → "All GVW & PCV 3W, GCV 3W"
+#    - ">3.5-45 T SATP"        → "All GVW & PCV 3W, GCV 3W"
+#    - "12-45 T (> 6 years)"   →"All GVW & PCV 3W, GCV 3W"
+#    - Any other tonnage line  → "All GVW & PCV 3W, GCV 3W"
+# 4. **policy_type** = "TP" for all rows (the table has no Comp column).
+# 5. **location** = list of cities in that row (e.g., "Mumbai, Pune" or "Mumbai, Pune, Nagpur").
+# 6. **payin** = the number before the "x" (e.g., "68x" → 68, "51x" → 51). Remove the "x", return plain integer.
+# 7. **remark** = the full tonnage text from the row (e.g., "<2.5 T", ">3.5-45 T SATP").
+
+# Do **not** collapse rows into a single record.  
+# If the image is **not** a TATA grid, fall back to the original rules above.
+# --- END OF OVERRIDE ---
+
+# Return ONLY JSON array, no markdown.
+# """
+       
+#         response = client.chat.completions.create(
+#             model="gpt-4o",
+#             messages=[{
+#                 "role": "user",
+#                 "content": [
+#                     {"type": "text", "text": prompt},
+#                     {"type": "image_url", "image_url": {"url": f"data:image/{file_extension};base64,{image_base64}"}}
+#                 ]
+#             }],
+#             temperature=0.0,
+#             max_tokens=4000
+#         )
+        
+#         extracted_text = response.choices[0].message.content.strip()
+        
+#         # Clean markdown formatting
+#         cleaned_text = re.sub(r'```json\s*|\s*```', '', extracted_text).strip()
+        
+#         # Extract JSON array
+#         start_idx = cleaned_text.find('[')
+#         end_idx = cleaned_text.rfind(']') + 1
+#         if start_idx != -1 and end_idx > start_idx:
+#             cleaned_text = cleaned_text[start_idx:end_idx]
+        
+#         # Validate JSON
+#         json.loads(cleaned_text)
+#         return cleaned_text
+        
+#     except Exception as e:
+#         logger.error(f"Error in OCR extraction: {str(e)}")
+#         return "[]"
+
+# def classify_payin(payin_value):
+#     """Classify payin into categories"""
+#     try:
+#         if isinstance(payin_value, (int, float)):
+#             payin_float = float(payin_value)
+#         else:
+#             payin_clean = str(payin_value).replace('%', '').replace(' ', '').replace('-', '').strip()
+#             if not payin_clean or payin_clean.upper() == 'N/A':
+#                 return 0.0, "Payin Below 20%"
+#             payin_float = float(payin_clean)
+        
+#         if payin_float <= 20:
+#             return payin_float, "Payin Below 20%"
+#         elif payin_float <= 30:
+#             return payin_float, "Payin 21% to 30%"
+#         elif payin_float <= 50:
+#             return payin_float, "Payin 31% to 50%"
+#         else:
+#             return payin_float, "Payin Above 50%"
+#     except (ValueError, TypeError) as e:
+#         logger.warning(f"Could not parse payin: {payin_value}, error: {e}")
+#         return 0.0, "Payin Below 20%"
+
+# def determine_lob(segment: str) -> str:
+#     """Determine LOB from segment"""
+#     segment_upper = segment.upper()
+    
+#     if any(kw in segment_upper for kw in ['TW', '2W', 'MC', 'SC', '1+5']):
+#         return "TW"
+#     elif any(kw in segment_upper for kw in ['PVT CAR', 'CAR', 'PCI']):
+#         return "PVT CAR"
+#     elif any(kw in segment_upper for kw in ['CV', 'GVW', 'PCV', 'GCV']):
+#         return "CV"
+#     elif 'BUS' in segment_upper:
+#         return "BUS"
+#     elif 'TAXI' in segment_upper:
+#         return "TAXI"
+#     elif any(kw in segment_upper for kw in ['MISD', 'TRACTOR']):
+#         return "MISD"
+    
+#     return "UNKNOWN"
+
+# def apply_formula(policy_data):
+#     """Apply formula rules and calculate payouts"""
+#     if not policy_data:
+#         return []
+    
+#     calculated_data = []
+    
+#     for record in policy_data:
+#         try:
+#             segment = str(record.get('segment', ''))
+#             payin_value = record.get('Payin_Value', 0)
+#             payin_category = record.get('Payin_Category', '')
+            
+#             lob = determine_lob(segment)
+#             segment_upper = segment.upper()
+            
+#             # Find matching rule
+#             matched_rule = None
+#             for rule in FORMULA_DATA:
+#                 # Match LOB
+#                 if rule["LOB"] != lob:
+#                     continue
+                
+#                 # Match Segment
+#                 rule_segment = rule["SEGMENT"].upper()
+#                 if rule_segment not in segment_upper:
+#                     continue
+                
+#                 # Match Payin Category or NIL
+#                 remarks = rule.get("REMARKS", "")
+#                 if remarks == "NIL" or payin_category in remarks:
+#                     matched_rule = rule
+#                     break
+            
+#             # Calculate payout
+#             if matched_rule:
+#                 po_formula = matched_rule["PO"]
+#                 calculated_payout = payin_value
+                
+#                 if "90% of Payin" in po_formula:
+#                     calculated_payout *= 0.9
+#                 elif "88% of Payin" in po_formula:
+#                     calculated_payout *= 0.88
+#                 elif "Less 2%" in po_formula or "-2%" in po_formula:
+#                     calculated_payout -= 2
+#                 elif "-3%" in po_formula:
+#                     calculated_payout -= 3
+#                 elif "-4%" in po_formula:
+#                     calculated_payout -= 4
+#                 elif "-5%" in po_formula:
+#                     calculated_payout -= 5
+                
+#                 calculated_payout = max(0, calculated_payout)
+#                 formula_used = po_formula
+#                 rule_explanation = f"Match: LOB={lob}, Segment={rule_segment}, {remarks}"
+#             else:
+#                 calculated_payout = payin_value
+#                 formula_used = "No matching rule"
+#                 rule_explanation = f"No rule for LOB={lob}, Segment={segment_upper}"
+            
+#             # Format remark
+#             remark_value = record.get('remark', '')
+#             if isinstance(remark_value, list):
+#                 remark_value = '; '.join(str(r) for r in remark_value)
+            
+#             calculated_data.append({
+#                 'segment': segment,
+#                 'policy type': record.get('policy_type', 'Comp'),
+#                 'location': record.get('location', 'N/A'),
+#                 'payin': f"{payin_value:.2f}%",
+#                 'remark': str(remark_value),
+#                 'Calculated Payout': f"{calculated_payout:.2f}%",
+#                 'Formula Used': formula_used,
+#                 'Rule Explanation': rule_explanation
+#             })
+            
+#         except Exception as e:
+#             logger.error(f"Error processing record {record}: {str(e)}")
+#             calculated_data.append({
+#                 'segment': str(record.get('segment', 'Unknown')),
+#                 'policy type': record.get('policy_type', 'Comp'),
+#                 'location': record.get('location', 'N/A'),
+#                 'payin': str(record.get('payin', '0%')),
+#                 'remark': str(record.get('remark', 'Error')),
+#                 'Calculated Payout': "Error",
+#                 'Formula Used': "Error",
+#                 'Rule Explanation': f"Error: {str(e)}"
+#             })
+    
+#     return calculated_data
+
+# def process_files(policy_file_bytes: bytes, policy_filename: str, policy_content_type: str, company_name: str):
+#     """Main processing function"""
+#     try:
+#         logger.info(f"🚀 Processing {policy_filename} for {company_name}")
+        
+#         # Extract text
+#         extracted_text = extract_text_from_file(policy_file_bytes, policy_filename, policy_content_type)
+        
+#         if not extracted_text or extracted_text == "[]":
+#             raise ValueError("No text extracted from image")
+        
+#         # Parse JSON
+#         policy_data = json.loads(extracted_text)
+#         if isinstance(policy_data, dict):
+#             policy_data = [policy_data]
+        
+#         if not policy_data:
+#             raise ValueError("No policy data found")
+        
+#         logger.info(f"✅ Parsed {len(policy_data)} records")
+        
+#         # Classify payin
+#         for record in policy_data:
+#             payin_val, payin_cat = classify_payin(record.get('payin', 0))
+#             record['Payin_Value'] = payin_val
+#             record['Payin_Category'] = payin_cat
+        
+#         # Apply formulas
+#         calculated_data = apply_formula(policy_data)
+        
+#         if not calculated_data:
+#             raise ValueError("No data after formula application")
+        
+#         logger.info(f"✅ Calculated {len(calculated_data)} records")
+        
+#         # Create Excel
+#         df = pd.DataFrame(calculated_data)
+#         output = BytesIO()
+        
+#         with pd.ExcelWriter(output, engine='openpyxl') as writer:
+#             df.to_excel(writer, sheet_name='Policy Data', startrow=2, index=False)
+#             worksheet = writer.sheets['Policy Data']
+            
+#             # Format headers
+#             for col_num, value in enumerate(df.columns, 1):
+#                 cell = worksheet.cell(row=3, column=col_num, value=value)
+#                 cell.font = cell.font.copy(bold=True)
+            
+#             # Add title
+#             title_cell = worksheet.cell(row=1, column=1, value=f"{company_name} - Policy Data")
+#             worksheet.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(df.columns))
+#             title_cell.font = title_cell.font.copy(bold=True, size=14)
+#             title_cell.alignment = title_cell.alignment.copy(horizontal='center')
+        
+#         output.seek(0)
+#         excel_data_base64 = base64.b64encode(output.read()).decode('utf-8')
+        
+#         # Calculate metrics
+#         avg_payin = sum([r['Payin_Value'] for r in policy_data]) / len(policy_data)
+#         formula_summary = {}
+#         for record in calculated_data:
+#             formula = record['Formula Used']
+#             formula_summary[formula] = formula_summary.get(formula, 0) + 1
+        
+#         return {
+#             "extracted_text": extracted_text,
+#             "parsed_data": policy_data,
+#             "calculated_data": calculated_data,
+#             "excel_data": excel_data_base64,
+#             "csv_data": df.to_csv(index=False),
+#             "json_data": json.dumps(calculated_data, indent=2),
+#             "formula_data": FORMULA_DATA,
+#             "metrics": {
+#                 "total_records": len(calculated_data),
+#                 "avg_payin": round(avg_payin, 1),
+#                 "unique_segments": len(set([r['segment'] for r in calculated_data])),
+#                 "company_name": company_name,
+#                 "formula_summary": formula_summary
+#             }
+#         }
+    
+#     except Exception as e:
+#         logger.error(f"Error in process_files: {str(e)}", exc_info=True)
+#         raise
+
+# @app.get("/", response_class=HTMLResponse)
+# async def root():
+#     """Serve HTML frontend"""
+#     html_path = Path("index.html")
+#     if html_path.exists():
+#         return HTMLResponse(content=html_path.read_text(encoding="utf-8"))
+#     return HTMLResponse(content="<h1>Insurance Policy Processing System</h1><p>Upload via POST /process</p>")
+
+# @app.post("/process")
+# async def process_policy(company_name: str = Form(...), policy_file: UploadFile = File(...)):
+#     """Process policy image"""
+#     try:
+#         policy_file_bytes = await policy_file.read()
+#         if not policy_file_bytes:
+#             return JSONResponse(status_code=400, content={"error": "Empty file"})
+        
+#         results = process_files(policy_file_bytes, policy_file.filename, policy_file.content_type, company_name)
+#         return JSONResponse(content=results)
+        
+#     except ValueError as e:
+#         return JSONResponse(status_code=400, content={"error": str(e)})
+#     except Exception as e:
+#         logger.error(f"Error: {str(e)}", exc_info=True)
+#         return JSONResponse(status_code=500, content={"error": f"Processing failed: {str(e)}"})
+
+# @app.get("/health")
+# async def health_check():
+#     """Health check"""
+#     return JSONResponse(content={"status": "healthy"})
+
+# if __name__ == "__main__":
+#     import uvicorn
+#     logger.info("🚀 Starting server at http://localhost:8000")
+#     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from io import BytesIO
@@ -25,862 +504,607 @@ load_dotenv()
 # Load OpenAI API key
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 if not OPENAI_API_KEY:
-    logger.error("⚠️ OPENAI_API_KEY environment variable not set")
-    raise RuntimeError("OPENAI_API_KEY environment variable not set. Please create a .env file with OPENAI_API_KEY=your-key")
+    logger.error("Warning: OPENAI_API_KEY environment variable not set")
+    raise RuntimeError("OPENAI_API_KEY environment variable not set")
 
 # Initialize OpenAI client
 try:
     client = OpenAI(api_key=OPENAI_API_KEY)
-    logger.info("✅ OpenAI client initialized successfully")
+    logger.info("OpenAI client initialized successfully")
 except Exception as e:
-    logger.error(f"❌ Failed to initialize OpenAI client: {str(e)}")
+    logger.error(f"Failed to initialize OpenAI client: {str(e)}")
     raise RuntimeError(f"Failed to initialize OpenAI client: {str(e)}")
 
 app = FastAPI(title="Insurance Policy Processing System")
 
-# Add CORS middleware for frontend compatibility
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://tata-image-report.vercel.app"],  # Adjust to specific origins in production, e.g., ["https://your-frontend.com"]
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Embedded Formula Data
+# Simplified Formula Data - Only for ICICI
 FORMULA_DATA = [
-    {"LOB": "TW", "SEGMENT": "1+5", "INSURER": "All Companies", "PO": "90% of Payin", "REMARKS": "NIL"},
-    {"LOB": "TW", "SEGMENT": "TW SAOD + COMP", "INSURER": "All Companies", "PO": "90% of Payin", "REMARKS": "NIL"},
-    {"LOB": "TW", "SEGMENT": "TW SAOD + COMP", "INSURER": "DIGIT", "PO": "-2%", "REMARKS": "Payin Below 20%"},
-    {"LOB": "TW", "SEGMENT": "TW SAOD + COMP", "INSURER": "DIGIT", "PO": "-3%", "REMARKS": "Payin 21% to 30%"},
-    {"LOB": "TW", "SEGMENT": "TW SAOD + COMP", "INSURER": "DIGIT", "PO": "-4%", "REMARKS": "Payin 31% to 50%"},
-    {"LOB": "TW", "SEGMENT": "TW SAOD + COMP", "INSURER": "DIGIT", "PO": "-5%", "REMARKS": "Payin Above 50%"},
-    {"LOB": "TW", "SEGMENT": "TW TP", "INSURER": "Bajaj, Digit, ICICI", "PO": "-3%", "REMARKS": "Payin Above 20%"},
-    {"LOB": "TW", "SEGMENT": "TW TP", "INSURER": "Rest of Companies", "PO": "-2%", "REMARKS": "Payin Below 20%"},
-    {"LOB": "TW", "SEGMENT": "TW TP", "INSURER": "Rest of Companies", "PO": "-3%", "REMARKS": "Payin 21% to 30%"},
-    {"LOB": "TW", "SEGMENT": "TW TP", "INSURER": "Rest of Companies", "PO": "-4%", "REMARKS": "Payin 31% to 50%"},
-    {"LOB": "TW", "SEGMENT": "TW TP", "INSURER": "Rest of Companies", "PO": "-5%", "REMARKS": "Payin Above 50%"},
-    {"LOB": "PVT CAR", "SEGMENT": "PVT CAR COMP + SAOD", "INSURER": "All Companies", "PO": "90% of Payin", "REMARKS": "All Fuel"},
-    {"LOB": "PVT CAR", "SEGMENT": "PVT CAR TP", "INSURER": "Bajaj, Digit, SBI", "PO": "-2%", "REMARKS": "Payin Below 20%"},
-    {"LOB": "PVT CAR", "SEGMENT": "PVT CAR TP", "INSURER": "Bajaj, Digit, SBI", "PO": "-3%", "REMARKS": "Payin Above 20%"},
-    {"LOB": "PVT CAR", "SEGMENT": "PVT CAR TP", "INSURER": "Rest of Companies", "PO": "90% of Payin", "REMARKS": "Zuno - 21"},
-    {"LOB": "CV", "SEGMENT": "Upto 2.5 GVW", "INSURER": "Reliance, SBI", "PO": "-2%", "REMARKS": "NIL"},
-    {"LOB": "CV", "SEGMENT": "All GVW & PCV 3W, GCV 3W", "INSURER": "Rest of Companies", "PO": "-2%", "REMARKS": "Payin Below 20%"},
-    {"LOB": "CV", "SEGMENT": "All GVW & PCV 3W, GCV 3W", "INSURER": "Rest of Companies", "PO": "-3%", "REMARKS": "Payin 21% to 30%"},
-    {"LOB": "CV", "SEGMENT": "All GVW & PCV 3W, GCV 3W", "INSURER": "Rest of Companies", "PO": "-4%", "REMARKS": "Payin 31% to 50%"},
-    {"LOB": "CV", "SEGMENT": "All GVW & PCV 3W, GCV 3W", "INSURER": "Rest of Companies", "PO": "-5%", "REMARKS": "Payin Above 50%"},
-    {"LOB": "BUS", "SEGMENT": "SCHOOL BUS", "INSURER": "TATA, Reliance, Digit, ICICI", "PO": "Less 2% of Payin", "REMARKS": "NIL"},
-    {"LOB": "BUS", "SEGMENT": "SCHOOL BUS", "INSURER": "Rest of Companies", "PO": "88% of Payin", "REMARKS": "NIL"},
-    {"LOB": "BUS", "SEGMENT": "STAFF BUS", "INSURER": "All Companies", "PO": "88% of Payin", "REMARKS": "NIL"},
-    {"LOB": "TAXI", "SEGMENT": "TAXI", "INSURER": "All Companies", "PO": "-2%", "REMARKS": "Payin Below 20%"},
-    {"LOB": "TAXI", "SEGMENT": "TAXI", "INSURER": "All Companies", "PO": "-3%", "REMARKS": "Payin 21% to 30%"},
-    {"LOB": "TAXI", "SEGMENT": "TAXI", "INSURER": "All Companies", "PO": "-4%", "REMARKS": "Payin 31% to 50%"},
-    {"LOB": "TAXI", "SEGMENT": "TAXI", "INSURER": "All Companies", "PO": "-5%", "REMARKS": "Payin Above 50%"},
-    {"LOB": "MISD", "SEGMENT": "Misd, Tractor", "INSURER": "All Companies", "PO": "88% of Payin", "REMARKS": "NIL"}
+    {"LOB": "TW", "SEGMENT": "1+5", "INSURER": "TATA", "PO": "90% of Payin", "REMARKS": "NIL"},
+    {"LOB": "TW", "SEGMENT": "TW SAOD + COMP", "INSURER": "TATA", "PO": "90% of Payin", "REMARKS": "NIL"},
+    
+    {"LOB": "TW", "SEGMENT": "TW TP", "INSURER": "TATA", "PO": "-2%", "REMARKS": "Payin Below 20%"},
+    {"LOB": "TW", "SEGMENT": "TW TP", "INSURER": "TATA", "PO": "-3%", "REMARKS": "Payin 21% to 30%"},
+    {"LOB": "TW", "SEGMENT": "TW TP", "INSURER": "TATA", "PO": "-4%", "REMARKS": "Payin 31% to 50%"},
+    {"LOB": "TW", "SEGMENT": "TW TP", "INSURER": "TATA", "PO": "-5%", "REMARKS": "Payin Above 50%"},
+
+    {"LOB": "PVT CAR", "SEGMENT": "PVT CAR COMP + SAOD", "INSURER": "TATA", "PO": "90% of Payin", "REMARKS": "Payin Below 20%"},
+    {"LOB": "PVT CAR", "SEGMENT": "PVT CAR COMP + SAOD", "INSURER": "TATA", "PO": "90% of Payin", "REMARKS": "Payin Above 20%"},
+    {"LOB": "PVT CAR", "SEGMENT": "PVT CAR COMP + SAOD", "INSURER": "TATA", "PO": "90% of Payin", "REMARKS": "Payin Above 30%"},
+    {"LOB": "PVT CAR", "SEGMENT": "PVT CAR COMP + SAOD", "INSURER": "TATA", "PO": "90% of Payin", "REMARKS": "Payin Above 40%"},
+    {"LOB": "PVT CAR", "SEGMENT": "PVT CAR COMP + SAOD", "INSURER": "TATA", "PO": "90% of Payin", "REMARKS": "Payin Above 50%"},
+
+    {"LOB": "PVT CAR", "SEGMENT": "PVT CAR TP", "INSURER": "TATA", "PO": "90% of Payin", "REMARKS": "Payin Below 20%"},
+    {"LOB": "PVT CAR", "SEGMENT": "PVT CAR TP", "INSURER": "TATA", "PO": "90% of Payin", "REMARKS": "Payin Above 20%"},
+    {"LOB": "PVT CAR", "SEGMENT": "PVT CAR TP", "INSURER": "TATA", "PO": "90% of Payin", "REMARKS": "Payin Above 30%"},
+    {"LOB": "PVT CAR", "SEGMENT": "PVT CAR TP", "INSURER": "TATA", "PO": "90% of Payin", "REMARKS": "Payin Above 40%"},
+    {"LOB": "PVT CAR", "SEGMENT": "PVT CAR TP", "INSURER": "TATA", "PO": "90% of Payin", "REMARKS": "Payin Above 50%"},
+
+    {"LOB": "CV", "SEGMENT": "All GVW & PCV 3W, GCV 3W", "INSURER": "TATA", "PO": "-2%", "REMARKS": "Payin Below 20%"},
+    {"LOB": "CV", "SEGMENT": "All GVW & PCV 3W, GCV 3W", "INSURER": "TATA", "PO": "-3%", "REMARKS": "Payin 21% to 30%"},
+    {"LOB": "CV", "SEGMENT": "All GVW & PCV 3W, GCV 3W", "INSURER": "TATA", "PO": "-4%", "REMARKS": "Payin 31% to 50%"},
+    {"LOB": "CV", "SEGMENT": "All GVW & PCV 3W, GCV 3W", "INSURER": "TATA", "PO": "-5%", "REMARKS": "Payin Above 50%"},
+
+    {"LOB": "BUS", "SEGMENT": "SCHOOL BUS", "INSURER": "TATA", "PO": "Less 2% of Payin", "REMARKS": "NIL"},
+    {"LOB": "BUS", "SEGMENT": "STAFF BUS", "INSURER": "TATA", "PO": "88% of Payin", "REMARKS": "NIL"},
+
+    {"LOB": "TAXI", "SEGMENT": "TAXI", "INSURER": "TATA", "PO": "-2%", "REMARKS": "Payin Below 20%"},
+    {"LOB": "TAXI", "SEGMENT": "TAXI", "INSURER": "TATA", "PO": "-3%", "REMARKS": "Payin 21% to 30%"},
+    {"LOB": "TAXI", "SEGMENT": "TAXI", "INSURER": "TATA", "PO": "-4%", "REMARKS": "Payin 31% to 50%"},
+    {"LOB": "TAXI", "SEGMENT": "TAXI", "INSURER": "TATA", "PO": "-5%", "REMARKS": "Payin Above 50%"},
+
+    {"LOB": "MISD", "SEGMENT": "Misd, Tractor", "INSURER": "TATA", "PO": "88% of Payin", "REMARKS": "NIL"}
 ]
 
 def extract_text_from_file(file_bytes: bytes, filename: str, content_type: str) -> str:
-    """Extract text from uploaded image file using OCR with enhanced prompting"""
+    """Extract text from uploaded image file using GPT-4o"""
     file_extension = filename.split('.')[-1].lower() if '.' in filename else ''
-    file_type = content_type if content_type else file_extension
-
-    # Image-based extraction with enhanced OCR
-    image_extensions = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff']
-    if file_extension in image_extensions or file_type.startswith('image/'):
-        try:
-            image_base64 = base64.b64encode(file_bytes).decode('utf-8')
-            
-            prompt = """Extract ALL text from this insurance policy image with extreme accuracy.
-
-CRITICAL INSTRUCTIONS:
-1. Read EVERY piece of text visible in the image, including:
-   - Headers, titles, and section names
-   - All table data (columns and rows)
-   - Segment/LOB information (TW, PVT CAR, CV, BUS, TAXI, MISD)
-   - Company names
-   - Policy types (TP, COMP, SAOD, etc.)
-   - Payin/Payout percentages or decimals
-   - Weight/tonnage (e.g., "upto 2.5 Tn", "2.5 GVW")
-   - Vehicle makes (Tata, Maruti, etc.)
-   - Age information (>5 years, etc.)
-   - Transaction types (New, Old, Renewal)
-   - Location/district information
-   - Validity dates
-   - ALL numerical values
-   - Any remarks, notes, or conditions
-
-2. Preserve the EXACT format and structure of tables if present
-3. If there's a table, clearly indicate column headers and separate rows
-4. For numbers that look like decimals (0.625, 0.34), preserve them exactly
-5. For percentages (34%, 62.5%), preserve them exactly
-6. Extract text in a structured, organized manner
-
-Return the complete text extraction - do not summarize or skip anything."""
-                
-            response = client.chat.completions.create(
-                model="gpt-4o",
-                messages=[{
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": prompt},
-                        {"type": "image_url", "image_url": {"url": f"data:image/{file_extension};base64,{image_base64}"}}
-                    ]
-                }],
-                temperature=0.0,
-                max_tokens=4000
-            )
-            
-            extracted_text = response.choices[0].message.content.strip()
-            
-            if not extracted_text or len(extracted_text) < 10:
-                logger.error("OCR returned very short or empty text")
-                return ""
-            
-            return extracted_text
-            
-        except Exception as e:
-            logger.error(f"Error in OCR extraction: {str(e)}")
-            raise ValueError(f"Failed to extract text from image: {str(e)}")
-
-    raise ValueError(f"Unsupported file type for {filename}. Only images are supported.")
-
-def clean_json_response(response_text: str) -> str:
-    """Clean and extract valid JSON array from OpenAI response"""
-    cleaned = re.sub(r'```json\s*|\s*```', '', response_text).strip()
     
-    start_idx = cleaned.find('[')
-    end_idx = cleaned.rfind(']') + 1 if cleaned.rfind(']') != -1 else len(cleaned)
+    if file_extension not in ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff'] and not content_type.startswith('image/'):
+        raise ValueError(f"Unsupported file type: {filename}")
     
-    if start_idx != -1 and end_idx > start_idx:
-        cleaned = cleaned[start_idx:end_idx]
-    else:
-        logger.warning("No valid JSON array found in response, returning empty array")
-        return "[]"
-    
-    if not cleaned.startswith('['):
-        cleaned = '[' + cleaned
-    if not cleaned.endswith(']'):
-        cleaned += ']'
-    
-    return cleaned
-
-def ensure_list_format(data) -> list:
-    """Ensure data is in list format"""
-    if isinstance(data, list):
-        return data
-    elif isinstance(data, dict):
-        return [data]
-    else:
-        raise ValueError(f"Expected list or dict, got {type(data)}")
-
-def classify_payin(payin_str):
-    """Converts Payin string to float and classifies its range"""
     try:
-        payin_clean = str(payin_str).replace('%', '').replace(' ', '').strip()
+        image_base64 = base64.b64encode(file_bytes).decode('utf-8')
         
-        if not payin_clean or payin_clean.upper() == 'N/A':
-            return 0.0, "Payin Below 20%"
-        
-        payin_value = float(payin_clean)
-        
-        if payin_value <= 20:
-            category = "Payin Below 20%"
-        elif 21 <= payin_value <= 30:
-            category = "Payin 21% to 30%"
-        elif 31 <= payin_value <= 50:
-            category = "Payin 31% to 50%"
-        else:
-            category = "Payin Above 50%"
-        return payin_value, category
-    except (ValueError, TypeError) as e:
-        logger.warning(f"Could not parse payin value: {payin_str}, error: {e}")
-        return 0.0, "Payin Below 20%"
+#         prompt = """
+# You are extracting insurance policy data from an image. Return a JSON array with these exact keys: segment, policy_type, location, payin, remark.
 
-def apply_formula_directly(policy_data, company_name):
-    """Apply formula rules directly using Python logic with default STAFF BUS for unspecified BUS"""
+# STEP-BY-STEP EXTRACTION:
+
+# STEP 1: Identify the vehicle/policy category
+# - 2W, MC, MCY, SC, Scooter, EV → TWO WHEELER
+# - PVT CAR, Car, PCI → PRIVATE CAR  
+# - CV, GVW, PCV, GCV, tonnage → COMMERCIAL VEHICLE
+# - Bus → BUS
+# - Taxi → TAXI
+# - Tractor, Ambulance, Misd → MISCELLANEOUS
+
+# STEP 2: Identify policy type from columns
+# - 1+1 column = Comp
+# - SATP column = TP
+# - If both exist, create TWO separate records
+
+# STEP 3: Map to EXACT segment (MANDATORY):
+
+# TWO WHEELER:
+#   IF 1+1 OR Comp OR SAOD → segment = "TW SAOD + COMP"
+#   IF SATP OR TP → segment = "TW TP"
+#   IF New/Fresh/1+5 → segment = "1+5"
+#   NEVER use "2W", "MC", "Scooter" as segment
+
+# PRIVATE CAR:
+#   IF 1+1 OR Comp OR SAOD → segment = "PVT CAR COMP + SAOD"
+#   IF SATP OR TP → segment = "PVT CAR TP"
+#   and 4W means 4 wheeler means Private Car 
+
+# COMMERCIAL VEHICLE:
+#   ALWAYS → segment = "All GVW & PCV 3W, GCV 3W"
+#   (Digit treats all CV the same regardless of tonnage)
+
+# BUS:
+#   IF School → segment = "SCHOOL BUS"
+#   ELSE → segment = "STAFF BUS"
+
+# TAXI:
+#   segment = "TAXI"
+
+# MISCELLANEOUS:
+#   segment = "Misd, Tractor"
+
+# STEP 4: Extract other fields
+# - policy_type: "Comp" or "TP"
+# - location: Cluster/Agency name
+# - payin: ONLY CD2 value as NUMBER (ignore CD1)
+# - remark: Additional details as STRING
+
+# CRITICAL RULES:
+# - payin must be numeric (63.0 not "63.0%")
+# - Create separate records if both 1+1 and SATP columns exist
+# - NEVER use raw names like "2W" in segment
+# - Handle negative % as positive
+
+# --- TATA-AIG CV GRID OVERRIDE (APPLY ONLY IF "TATA" OR "Forwarded" IS VISIBLE) ---
+# IF the image contains the word **TATA**, **Forwarded**, or a grid titled "Grid Applicable for June 25":
+
+
+# 2. Extract **EVERY ROW** in the table as a **separate JSON record**.
+# 3. For **segment** use the exact tonnage/type shown  it comes under segment "All GVW & PCV 3W, GCV 3W". 
+#    - "2.5–3.5 T"             → "All GVW & PCV 3W, GCV 3W"
+#    - "<2.5 T"                →"All GVW & PCV 3W, GCV 3W"
+#    - "3.5–12 T"              →"All GVW & PCV 3W, GCV 3W"
+#    - "PCV 3W"                → "All GVW & PCV 3W, GCV 3W"
+#    - ">3.5-45 T SATP"        → "All GVW & PCV 3W, GCV 3W"
+#    - "12-45 T (> 6 years)"   →"All GVW & PCV 3W, GCV 3W"
+#    - Any other tonnage line  → "All GVW & PCV 3W, GCV 3W"
+# 4. **policy_type** = "TP" for all rows (the table has no Comp column).
+# 5. **location** = list of cities in that row (e.g., "Mumbai, Pune" or "Mumbai, Pune, Nagpur").
+# 6. **payin** = the number before the "x" (e.g., "68x" → 68, "51x" → 51). Remove the "x", return plain integer.
+# 7. **remark** = the full tonnage text from the row (e.g., "<2.5 T", ">3.5-45 T SATP").
+
+# Do **not** collapse rows into a single record.  
+# If the image is **not** a TATA grid, fall back to the original rules above.
+# --- END OF OVERRIDE ---
+
+# Return ONLY JSON array, no markdown.
+# """
+        prompt = """
+You are extracting insurance policy data from an image. Return a JSON array with these exact keys: segment, policy_type, location, payin, remark.
+
+STEP-BY-STEP EXTRACTION:
+
+STEP 1: Identify the vehicle/policy category
+- 2W, MC, MCY, SC, Scooter, EV → TWO WHEELER
+- PVT CAR, Car, PCI → PRIVATE CAR  
+- CV, GVW, PCV, GCV, tonnage → COMMERCIAL VEHICLE
+- Bus → BUS
+- Taxi → TAXI
+- Tractor, Ambulance, Misd → MISCELLANEOUS
+
+STEP 2: Identify policy type from columns
+- 1+1 column = Comp
+- SATP column = TP
+- If both exist, create TWO separate records
+
+STEP 3: Map to EXACT segment (MANDATORY):
+
+TWO WHEELER:
+  IF 1+1 OR Comp OR SAOD → segment = "TW SAOD + COMP"
+  IF SATP OR TP → segment = "TW TP"
+  IF New/Fresh/1+5 → segment = "1+5"
+  NEVER use "2W", "MC", "Scooter" as segment
+
+PRIVATE CAR:
+  IF 1+1 OR Comp OR SAOD → segment = "PVT CAR COMP + SAOD"
+  IF SATP OR TP → segment = "PVT CAR TP"
+  and 4W means 4 wheeler means Private Car 
+
+COMMERCIAL VEHICLE:
+  ALWAYS → segment = "All GVW & PCV 3W, GCV 3W"
+  (Digit treats all CV the same regardless of tonnage)
+
+BUS:
+  IF School → segment = "SCHOOL BUS"
+  ELSE → segment = "STAFF BUS"
+
+TAXI:
+  segment = "TAXI"
+
+MISCELLANEOUS:
+  segment = "Misd, Tractor"
+
+STEP 4: Extract other fields
+- policy_type: "Comp" or "TP"
+- location: Cluster/Agency name
+- payin: ONLY CD2 value as NUMBER (ignore CD1)
+- remark: Additional details as STRING
+
+CRITICAL RULES:
+- payin must be numeric (63.0 not "63.0%")
+- Create separate records if both 1+1 and SATP columns exist
+- NEVER use raw names like "2W" in segment
+- Handle negative % as positive
+
+--- TATA-AIG CV GRID OVERRIDE (APPLY ONLY IF "TATA" OR "Forwarded" IS VISIBLE) ---
+IF the image contains the word **TATA**, **Forwarded**, or a grid titled "Grid Applicable for June 25":
+
+
+2. Extract **EVERY ROW** in the table as a **separate JSON record**.
+3. For **segment** use the exact tonnage/type shown  it comes under segment "All GVW & PCV 3W, GCV 3W". 
+   - "2.5–3.5 T"             → "All GVW & PCV 3W, GCV 3W"
+   - "<2.5 T"                →"All GVW & PCV 3W, GCV 3W"
+   - "3.5–12 T"              →"All GVW & PCV 3W, GCV 3W"
+   - "PCV 3W"                → "All GVW & PCV 3W, GCV 3W"
+   - ">3.5-45 T SATP"        → "All GVW & PCV 3W, GCV 3W"
+   - "12-45 T (> 6 years)"   →"All GVW & PCV 3W, GCV 3W"
+   - Any other tonnage line  → "All GVW & PCV 3W, GCV 3W"
+4. **policy_type** = "TP" for all rows (the table has no Comp column).
+5. **location** = list of cities in that row (e.g., "Mumbai, Pune" or "Mumbai, Pune, Nagpur").
+6. **payin** = the number before the "x" (e.g., "68x" → 68, "51x" → 51). Remove the "x", return plain integer.
+7. **remark** = the full tonnage text from the row (e.g., "<2.5 T", ">3.5-45 T SATP").
+
+Do **not** collapse rows into a single record.  
+If the image is **not** a TATA grid, fall back to the original rules above.
+--- END OF OVERRIDE ---
+
+**IMPORTANT: If there are separate columns for Petrol, Diesel, CNG, or any other fuel type, extract each as a separate record with the same segment, policy_type, and location, but include the fuel type and its corresponding payin value. For example, if a row has Petrol 55% and Diesel 45%, create two records: one with payin=55 and remark including "Petrol", another with payin=45 and remark including "Diesel".**
+
+Let me train you on one data
+
+So, here is the data 
+
++---------------------------+---------------------------+---------------------------+---------------------------+---------------------------+
+| School bus > 11 SC        |                           | Pan India except ROTN, MP 1,2 &3                         |                           |
++---------------------------+---------------------------+---------------------------+---------------------------+---------------------------+
+|                           | Additional- Yearly /      |                           |                           |                           |
+| YTD Target ( in Cr)       | qtry                      | Institute                 | Individual                | TATA < 11 SC on all RTO's |
++---------------------------+---------------------------+---------------------------+---------------------------+---------------------------+
+| >35                       | 2.5%                      | 75.00%                    | 72.00%                    | 50%                       |
++---------------------------+---------------------------+---------------------------+---------------------------+---------------------------+
+|                           |                           | * ROTN- 65 %,             |                           |                           |
+|                           |                           | MP 1, MP 2 & MP 3 - 67%   |                           |                           |
+|                           |                           | <11 Seating 50% max       |                           |                           |
++---------------------------+---------------------------+---------------------------+---------------------------+---------------------------+
+
+the interpretation is as follows:
+
+School Bus segment and in remark write it is 11 seater
+all india rate for individual is 72%
+and for institute it is 75%
+
+tata <11 seater all india is 50
+
+except for the ROTN,MP-1,2 & 3
+
+For ROTN -> School Bus >11 Seater is 65%
+also for the MP-1,2 &3 it is 67%
+
+for <11 seater it is 50%
+
+so this was it , this was the interpretation
+
+
+
+
+Return ONLY JSON array, no markdown.
+"""
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": prompt},
+                    {"type": "image_url", "image_url": {"url": f"data:image/{file_extension};base64,{image_base64}"}}
+                ]
+            }],
+            temperature=0.0,
+            max_tokens=4000
+        )
+        
+        extracted_text = response.choices[0].message.content.strip()
+        
+        # Clean markdown formatting
+        cleaned_text = re.sub(r'```json\s*|\s*```', '', extracted_text).strip()
+        
+        # Extract JSON array
+        start_idx = cleaned_text.find('[')
+        end_idx = cleaned_text.rfind(']') + 1
+        if start_idx != -1 and end_idx > start_idx:
+            cleaned_text = cleaned_text[start_idx:end_idx]
+        
+        # Validate JSON
+        json.loads(cleaned_text)
+        return cleaned_text
+        
+    except Exception as e:
+        logger.error(f"Error in OCR extraction: {str(e)}")
+        return "[]"
+
+def determine_lob(segment: str) -> str:
+    """Determine LOB from segment"""
+    segment_upper = segment.upper()
+    
+    if 'BUS' in segment_upper:
+        return "BUS"
+    elif any(kw in segment_upper for kw in ['TW', '2W', 'MC', 'SC', '1+5']):
+        return "TW"
+    elif any(kw in segment_upper for kw in ['PVT CAR', 'CAR', 'PCI']):
+        return "PVT CAR"
+    elif any(kw in segment_upper for kw in ['CV', 'GVW', 'PCV', 'GCV']):
+        return "CV"
+    elif 'TAXI' in segment_upper:
+        return "TAXI"
+    elif any(kw in segment_upper for kw in ['MISD', 'TRACTOR']):
+        return "MISD"
+    
+    return "UNKNOWN"
+
+def apply_formula(policy_data):
+    """Apply formula rules and calculate payouts - SEGMENT-AWARE"""
     if not policy_data:
-        logger.warning("No policy data to process")
         return []
     
     calculated_data = []
     
     for record in policy_data:
         try:
-            segment = str(record.get('Segment', '')).upper()
-            payin_value = record.get('Payin_Value', 0)
-            payin_category = record.get('Payin_Category', '')
-            
-            lob = ""
+            segment = str(record.get('segment', '')).strip()
+            payin_raw = record.get('payin', 0)
+            policy_type = record.get('policy_type', 'Comp')
+            location = record.get('location', 'N/A')
+            remark = record.get('remark', '')
+            if isinstance(remark, list):
+                remark = '; '.join(str(r) for r in remark)
+            remark = str(remark)
+
+            # Parse payin to float
+            try:
+                payin_value = float(str(payin_raw).replace('%', '').replace('x', '').strip())
+                payin_value = max(0, payin_value)
+            except:
+                payin_value = 0.0
+
+            lob = determine_lob(segment)
             segment_upper = segment.upper()
-            
-            if any(tw_keyword in segment_upper for tw_keyword in ['TW', '2W', 'TWO WHEELER', 'TWO-WHEELER']):
-                lob = "TW"
-            elif any(car_keyword in segment_upper for car_keyword in ['PVT CAR', 'PRIVATE CAR', 'CAR', 'PCI']):
-                lob = "PVT CAR"
-            elif any(cv_keyword in segment_upper for cv_keyword in ['CV', 'COMMERCIAL', 'LCV', 'GVW', 'TN', 'UPTO', 'ALL GVW', 'PCV', 'GCV']):
-                lob = "CV"
-            elif 'BUS' in segment_upper:
-                lob = "BUS"
-            elif 'TAXI' in segment_upper:
-                lob = "TAXI"
-            elif any(misd_keyword in segment_upper for misd_keyword in ['MISD', 'TRACTOR', 'MISC', 'AMBULANCE', 'POLICE VAN', 'GARBAGE VAN']):
-                lob = "MISD"
-            else:
-                remarks_upper = str(record.get('Remarks', '')).upper()
-                if any(cv_keyword in remarks_upper for cv_keyword in ['TATA', 'MARUTI', 'GVW', 'TN']):
-                    lob = "CV"
-                else:
-                    lob = "UNKNOWN"
-            
-            matched_segment = segment_upper
-            if lob == "BUS":
-                if "SCHOOL" not in segment_upper and "STAFF" not in segment_upper:
-                    matched_segment = "STAFF BUS"
-                elif "SCHOOL" in segment_upper:
-                    matched_segment = "SCHOOL BUS"
-                elif "STAFF" in segment_upper:
-                    matched_segment = "STAFF BUS"
-            
-            matched_rule = None
-            rule_explanation = ""
-            company_normalized = company_name.upper().replace('GENERAL', '').replace('INSURANCE', '').strip()
-            
+
+            # Find all rules for this LOB and Segment
+            matching_rules = []
             for rule in FORMULA_DATA:
                 if rule["LOB"] != lob:
                     continue
-                    
-                rule_segment = rule["SEGMENT"].upper()
-                segment_match = False
-                
-                if lob == "CV":
-                    if "UPTO 2.5" in rule_segment:
-                        if any(keyword in segment_upper for keyword in ["UPTO 2.5", "2.5 TN", "2.5 GVW", "2.5TN", "2.5GVW", "UPTO2.5"]):
-                            segment_match = True
-                    elif "ALL GVW" in rule_segment:
-                        segment_match = True
-                elif lob == "BUS":
-                    if matched_segment == rule_segment:
-                        segment_match = True
-                elif lob == "PVT CAR":
-                    if "COMP" in rule_segment and any(keyword in segment for keyword in ["COMP", "COMPREHENSIVE", "PACKAGE", "1ST PARTY", "1+1"]):
-                        segment_match = True
-                    elif "TP" in rule_segment and "TP" in segment and "COMP" not in segment:
-                        segment_match = True
-                elif lob == "TW":
-                    if "1+5" in rule_segment and any(keyword in segment for keyword in ["1+5", "NEW", "FRESH"]):
-                        segment_match = True
-                    elif "SAOD + COMP" in rule_segment and any(keyword in segment for keyword in ["SAOD", "COMP", "PACKAGE", "1ST PARTY", "1+1"]):
-                        segment_match = True
-                    elif "TP" in rule_segment and "TP" in segment:
-                        segment_match = True
-                else:
-                    segment_match = True
-                
-                if not segment_match:
+                if rule["SEGMENT"].upper() not in segment_upper:
                     continue
-                
-                insurers = [ins.strip().upper() for ins in rule["INSURER"].split(',')]
-                company_match = False
-                
-                if "ALL COMPANIES" in insurers:
-                    company_match = True
-                elif "REST OF COMPANIES" in insurers:
-                    is_in_specific_list = False
-                    for other_rule in FORMULA_DATA:
-                        if (other_rule["LOB"] == rule["LOB"] and 
-                            other_rule["SEGMENT"] == rule["SEGMENT"] and
-                            "REST OF COMPANIES" not in other_rule["INSURER"] and
-                            "ALL COMPANIES" not in other_rule["INSURER"]):
-                            other_insurers = [ins.strip().upper() for ins in other_rule["INSURER"].split(',')]
-                            if any(company_key in company_normalized for company_key in other_insurers):
-                                is_in_specific_list = True
-                                break
-                    if not is_in_specific_list:
-                        company_match = True
-                else:
-                    for insurer in insurers:
-                        if insurer in company_normalized or company_normalized in insurer:
-                            company_match = True
-                            break
-                
-                if not company_match:
-                    continue
-                
-                remarks = rule.get("REMARKS", "")
-                
-                if remarks == "NIL" or "NIL" in remarks.upper():
-                    matched_rule = rule
-                    rule_explanation = f"Direct match: LOB={lob}, Segment={rule_segment}, Company={rule['INSURER']}"
+                matching_rules.append(rule)
+
+            if not matching_rules:
+                calculated_data.append({
+                    'segment': segment,
+                    'policy type': policy_type,
+                    'location': location,
+                    'payin': f"{payin_value:.2f}%",
+                    'remark': remark,
+                    'Calculated Payout': f"{payin_value:.2f}%",
+                    'Formula Used': "No matching rule",
+                    'Rule Explanation': f"No rule for LOB={lob}, Segment={segment}"
+                })
+                continue
+
+            # Helper: get threshold for sorting
+            def get_threshold(remark):
+                remark = remark.strip()
+                if remark == "NIL":
+                    return float('inf')
+                if "Below 20" in remark:
+                    return 20
+                if "21% to 30" in remark:
+                    return 30
+                if "31% to 50" in remark:
+                    return 50
+                if "Above 50" in remark:
+                    return float('inf')
+                if "Above 40" in remark:
+                    return 40
+                if "Above 30" in remark:
+                    return 30
+                if "Above 20" in remark:
+                    return 20
+                return 0
+
+            # Sort rules: lower threshold first, NIL last
+            sorted_rules = sorted(
+                matching_rules,
+                key=lambda r: (get_threshold(r["REMARKS"]), 0 if r["REMARKS"] == "NIL" else 1)
+            )
+
+            # Find matching rule
+            applied_rule = None
+            explanation = ""
+
+            for rule in sorted_rules:
+                remarks = rule["REMARKS"]
+                if remarks == "NIL":
+                    applied_rule = rule
+                    explanation = "NIL condition"
                     break
-                elif any(payin_keyword in remarks for payin_keyword in ["Payin Below", "Payin 21%", "Payin 31%", "Payin Above"]):
-                    if payin_category in remarks:
-                        matched_rule = rule
-                        rule_explanation = f"Payin category match: LOB={lob}, Segment={rule_segment}, Payin={payin_category}"
-                        break
-                else:
-                    matched_rule = rule
-                    rule_explanation = f"Other remarks match: LOB={lob}, Segment={rule_segment}, Remarks={remarks}"
+
+                if "Below 20" in remarks and payin_value < 20:
+                    applied_rule = rule
+                    explanation = f"payin {payin_value} < 20"
                     break
-            
-            if matched_rule:
-                po_formula = matched_rule["PO"]
-                calculated_payout = payin_value
-                
-                if "90% of Payin" in po_formula:
-                    calculated_payout *= 0.9
-                elif "88% of Payin" in po_formula:
-                    calculated_payout *= 0.88
-                elif "Less 2% of Payin" in po_formula:
-                    calculated_payout -= 2
-                elif "-2%" in po_formula:
-                    calculated_payout -= 2
-                elif "-3%" in po_formula:
-                    calculated_payout -= 3
-                elif "-4%" in po_formula:
-                    calculated_payout -= 4
-                elif "-5%" in po_formula:
-                    calculated_payout -= 5
-                
-                calculated_payout = max(0, calculated_payout)
-                formula_used = po_formula
-            else:
-                calculated_payout = payin_value
-                formula_used = "No matching rule found"
-            
-            result_record = record.copy()
-            result_record['Calculated Payout'] = f"{calculated_payout:.2f}%"
-            result_record['Formula Used'] = formula_used
-            result_record['Rule Explanation'] = rule_explanation
-            
-            calculated_data.append(result_record)
-            
+                elif "21% to 30" in remarks and 21 <= payin_value <= 30:
+                    applied_rule = rule
+                    explanation = f"payin {payin_value} in [21,30]"
+                    break
+                elif "31% to 50" in remarks and 31 <= payin_value <= 50:
+                    applied_rule = rule
+                    explanation = f"payin {payin_value} in [31,50]"
+                    break
+                elif "Above 50" in remarks and payin_value > 50:
+                    applied_rule = rule
+                    explanation = f"payin {payin_value} > 50"
+                    break
+                elif "Above 40" in remarks and payin_value > 40:
+                    applied_rule = rule
+                    explanation = f"payin {payin_value} > 40"
+                    break
+                elif "Above 30" in remarks and payin_value > 30:
+                    applied_rule = rule
+                    explanation = f"payin {payin_value} > 30"
+                    break
+                elif "Above 20" in remarks and payin_value > 20:
+                    applied_rule = rule
+                    explanation = f"payin {payin_value} > 20"
+                    break
+
+            # Fallback
+            if not applied_rule:
+                applied_rule = matching_rules[0]
+                explanation = "fallback"
+
+            # Apply formula
+            po_formula = applied_rule["PO"]
+            payout = payin_value
+
+            if "90% of Payin" in po_formula:
+                payout *= 0.90
+            elif "88% of Payin" in po_formula:
+                payout *= 0.88
+            elif "Less 2% of Payin" in po_formula:
+                payout = max(0, payout - 2)
+            elif "-2%" in po_formula:
+                payout = max(0, payout - 2)
+            elif "-3%" in po_formula:
+                payout = max(0, payout - 3)
+            elif "-4%" in po_formula:
+                payout = max(0, payout - 4)
+            elif "-5%" in po_formula:
+                payout = max(0, payout - 5)
+
+            rule_explanation = f"Match: LOB={lob}, Segment={applied_rule['SEGMENT']}, {explanation}"
+
+            calculated_data.append({
+                'segment': segment,
+                'policy type': policy_type,
+                'location': location,
+                'payin': f"{payin_value:.2f}%",
+                'remark': remark,
+                'Calculated Payout': f"{payout:.2f}%",
+                'Formula Used': po_formula,
+                'Rule Explanation': rule_explanation
+            })
+
         except Exception as e:
-            logger.error(f"Error processing record: {record}, error: {str(e)}")
-            result_record = record.copy()
-            result_record['Calculated Payout'] = "Error"
-            result_record['Formula Used'] = "Error in calculation"
-            result_record['Rule Explanation'] = f"Error: {str(e)}"
-            calculated_data.append(result_record)
-    
+            logger.error(f"Error processing record {record}: {str(e)}")
+            calculated_data.append({
+                'segment': str(record.get('segment', 'Error')),
+                'policy type': 'Error',
+                'location': 'Error',
+                'payin': 'Error',
+                'remark': 'Error',
+                'Calculated Payout': "Error",
+                'Formula Used': "Error",
+                'Rule Explanation': f"Error: {str(e)}"
+            })
+
     return calculated_data
 
 def process_files(policy_file_bytes: bytes, policy_filename: str, policy_content_type: str, company_name: str):
-    """Main processing function with enhanced error handling"""
+    """Main processing function"""
     try:
-        logger.info("=" * 50)
-        logger.info(f"🚀 Starting file processing for {policy_filename}...")
-        logger.info(f"📁 File size: {len(policy_file_bytes)} bytes")
+        logger.info(f"Processing {policy_filename} for {company_name}")
         
         # Extract text
-        logger.info("🔍 Extracting text from policy image...")
         extracted_text = extract_text_from_file(policy_file_bytes, policy_filename, policy_content_type)
-        logger.info(f"✅ Extracted text length: {len(extracted_text)} chars")
-
-        if not extracted_text.strip():
-            logger.error("No text extracted from the image")
-            raise ValueError("No text could be extracted. Please ensure the image is clear and contains readable text.")
-
-        # Parse with AI
-        logger.info("🧠 Parsing policy data with AI...")
         
-        parse_prompt="""
-    Analyze this insurance policy text and extract structured data.
-
-Company Name: {company_name}
-
-CRITICAL INSTRUCTIONS:
-1. ALWAYS return a valid JSON ARRAY (list) of objects, even if there's only one record or no data is found. If multiple lines, tables, emails, or messages are present (e.g., grids with rows, forwarded messages), create a separate object for each row or entry.
-2. Each object must have these EXACT field names:
-   - "Segment": Standardized LOB + policy type (e.g., "TW TP", "PVT CAR COMP + SAOD", "Upto 2.5 GVW"). If unsure or no data, use "Unknown".
-   - "Location": location/region information (e.g., "Mumbai, Pune", "Nagpur", "RTO Cluster: GOA", states like "GA", "JH", RTOs like "R13", "MP1, MP2", use "N/A" if not found).
-   - "Policy Type": policy type details (use "N/A" if not specified, or "COMP/TP" if mixed, "SATP" maps to "TP").
-   - "Payin": percentage value (convert decimals: 0.625 → 62.5%, or keep as is: 34%, use "0%" if not found; extract petrol/diesel separately if present).
-   - "Doable District": district info or RTO-related (use "N/A" if not found).
-   - "Remarks": additional info including vehicle makes, age (e.g., ">6 years"), transaction type, validity, fuel type (e.g., "Petrol: 50%, Diesel: 45%"), notes (e.g., "Decrease by 3%", "No additional deal", "irrespective of Institution"), month/year (e.g., "June 25", "FY 25-26"), and raw text snippets if ambiguous.
-
-3. For Segment field:
-   - First, identify the LOB: TW (Two Wheeler, including MCY for motorcycles or scooters), PVT CAR (Private Car or PCI), CV (Commercial Vehicle), BUS, TAXI, MISD (Miscellaneous).
-   - Then, determine policy type: TP (Third Party, including SATP), COMP (Comprehensive, or synonyms like package, 1st party, 1+1), SAOD (Stand Alone Own Damage), etc.
-   - Use your intelligence to standardize the "Segment" to EXACTLY match one of these predefined values based on the text content, keywords, tonnage, or descriptions. If no match or unclear, use "Unknown":
-     - TW-related (including MCY for motorcycles/scooters):
-       - If mentions 1+5 year plan, long-term policy, new, or fresh: "1+5"
-       - If SAOD + COMP, Comprehensive + Own Damage, package, 1st party, 1+1, or similar full coverage: "TW SAOD + COMP"
-       - If TP only, Third Party, or liability-only (including SATP): "TW TP"
-     - PVT CAR-related (or PCI):
-       - If COMP + SAOD, Comprehensive + Own Damage, package, 1st party, 1+1, or full coverage: "PVT CAR COMP + SAOD"
-       - If TP only or Third Party (including SATP): "PVT CAR TP"
-     - CV-related (Commercial Vehicle):
-       - If upto 2.5 Tn, 2.5 GVW, or similar low tonnage/weight (e.g., "upto 2.5", "2.5 Tn"): "Upto 2.5 GVW"
-       - For all other CV cases, higher tonnage (e.g., "2.5 - 3.5 Tn", "3.5-12 Tn", ">3.5-45 Tn", "12-45 Tn"), PCV 3W, GCV 3W, or general CV: "All GVW & PCV 3W, GCV 3W"
-     - BUS-related:
-       - If School Bus or educational (e.g., "School bus >14 seater", "<11 SC"): "SCHOOL BUS"
-       - If Staff Bus, corporate, or other bus types: "STAFF BUS"
-     - TAXI-related: "TAXI"
-     - MISD-related (Miscellaneous, Tractor, ambulance, police van, garbage van, etc.): "Misd, Tractor"
-   - If ambiguous, infer from context (e.g., tonnage for CV, "Private Car SATP" to "PVT CAR TP") and default to "Unknown".
-
-4. For Payin field:
-   - If you see decimals like 0.625, convert to 62.5%
-   - If you see whole numbers like 34, add % to make 34%
-   - If you see percentages, keep them as is (e.g., "50%", "45%", " -72%")
-   - Use the value from the "PO" column, "Payin" column, or any percentage in grids (e.g., Petrol/Diesel columns, or "2.5%").
-   - If multiple (e.g., Petrol and Diesel), use "Petrol: X%, Diesel: Y%" in Payin or move to Remarks.
-   - If not found, use "0%"
-   - Do not use values from "Discount" column
-
-5. For Remarks field - extract ALL additional info:
-   - Vehicle makes (Tata, Maruti, etc.) → "Vehicle Makes: Tata, Maruti"
-   - Age info (>5 years, etc.) → "Age: >5 years"
-   - Transaction type (New/Old/Renewal) → "Transaction: New"
-   - Validity dates → "Validity till: [date]" (e.g., "1st June 2025 to 30th June 2025", "FY 25-26")
-   - Decline RTO information (e.g., "Decline RTO: Dhar, Jhabua")
-   - Fuel type (diesel, petrol, etc.) → "Fuel Type: Diesel" (if present)
-   - Notes like "Decrease by 3%", "No additional deal", "irrespective of Institution", "Below 11 seater part of YTD target"
-   - Combine with semicolons: "Vehicle Makes: Tata; Age: >5 years; Transaction: New; Fuel Type: Diesel" (use "N/A" if nothing found)
-
-IMPORTANT: 
-- If a field is not found, use "N/A"
-- Return ONLY the JSON array, no other text
-- Ensure the JSON is valid and parseable
-- Do not extract or include the "Discount" column or its values in any field. Ignore it completely.
-- The "PO" column contains the Payin values - use that for the "Payin" field.
-- The table may have a "Discount" column - IGNORE it completely. Do not include its values anywhere, not even in remarks.
-IGNORE these columns completely - DO NOT extract them:
-   - Discount
-   - CD1
-   - Any column containing "discount" or "cd1" 
-   - These are not needed for our analysis
-
-Point to be Noted:
-- SATP means TP , so Whenever Private Car SATP is mentioned then it means PVT CAR TP
-- sometimes the two columns are also there in the input which are in values , like diesel or petrol, means fuel type also , so Extract that too and parse that too
-- Sometimes MCY means motorcycle  , so consider them in TW LOB , be it Motorcycles, scooters
-- Handle various formats: line-separated grids (e.g., tonnage with locations and percentages), tables with State/RTO/Fuel, emails with forwarded messages, incentives for YTD targets.
-- Extract month/year (e.g., "June 25", "July 25", "Aug 25", "FY 25-26") in Remarks.
-- For grids, create one object per row or entry (e.g., each state/RTO as a record).
-- If text is ambiguous, infer LOB/Segment from context (e.g., "School bus >14 seater" to "SCHOOL BUS").
-- Also if in the put % is mentioned in "-" , this sign is not subtraction but infact it is hyphen symbol 
-- Sometimes the values given in input are for example -68% , so in that case also consider it as 68% only and ignore the - sign
-- Sometimes segment is also mentioned as Product in the input , and remember PCI means Private Car
-- sometimes the two columns are also there in the input which are in values , like diesel or petrol, means fuel type also , so Extract that too and parse that too
-
-
-### In-Depth Description of the Data in the Provided Screenshots
-
-I'll describe the data from each screenshot in depth, based on the visible content. I've numbered them for clarity based on the order they appear in your query. Each description covers:
-- **Format/Structure**: How the data is presented (e.g., table, list, email, message).
-- **Content Overview**: Key themes, products, and entities mentioned (e.g., insurance types, locations, percentages).
-- **Detailed Breakdown**: Line-by-line or row-by-row analysis, including any notes, dates, and implications.
-- **Context and Implications**: What the data seems to represent (e.g., insurance payout grids, revisions, incentives), potential use cases, and patterns.
-
-This is a comprehensive analysis to help you understand the data's organization, patterns, and potential for extraction/processing in your code.
-
-#### **Screenshot 1: Email about PCI Grid for June 2025**
-- **Format/Structure**: This is a formal email with a subject line, body text, and a small table. The table is a standard grid with headers and rows, formatted in a word processor or email client (likely Outlook or Gmail). The table has 8 columns and 3 rows (1 header + 2 data rows). It's compact, with some cells merged or spanning multiple columns. Below the table, there's a sign-off and signature.
-- **Content Overview**: The email discusses a "PCI Grid" (likely "Private Car Insurance Grid") effective from June 1 to June 30, 2025. It focuses on "PO on OD" (Payout on Own Damage) rates for different fuel types (Diesel vs. Other Than Diesel). Key entities: Probus Insurance Broker, Tata AIG (implied from Cc), locations like "PAN India", and terms like "NCB" (No Claim Bonus). Percentages are positive, indicating payouts or rates.
-- **Detailed Breakdown**:
-  - **Header**: "Business Type", "Segment", "Fuel Type", "Section Text", "Discount", "RTO", "NCB", "PO on OD".
-  - **Row 1**: Business Type: "All", Segment: "All", Fuel Type: "Other Than Diesel", Section Text: "Package/SAOD", Discount: "All", RTO: "PAN India", NCB: "No", PO on OD: "19.50".
-  - **Row 2**: Business Type: "All", Segment: "All", Fuel Type: "Other Than Diesel", Section Text: "Package/SAOD", Discount: "All", RTO: "PAN India", NCB: "Yes", PO on OD: "25.00".
-  - Body Text: "As discussed over call please find the below PCI Grid effective 1st June 2025 to 30th June 2025." Followed by "Product: PCI".
-  - Sign-off: "Thanks, Bhavessh Mistry, Regional Sales Manager, Ahmedabad".
-- **Context and Implications**: This appears to be an update on insurance payout rates for private car own damage coverage, differentiated by NCB status. "PAN India" indicates nationwide applicability except possibly specified RTOs. The data is tabular, easy to extract, but note the repeated "Other Than Diesel" – it might imply a focus on non-diesel vehicles. Percentages (19.50, 25.00) are likely commission or payout rates. Patterns: No variation by segment or business type (all "All"), suggesting a uniform policy. For code extraction, focus on table rows, ignoring "Discount" as per your prompt.
-
-#### **Screenshot 2: WhatsApp Message about MH Grid for June 25**
-- **Format/Structure**: This is a forwarded WhatsApp message in a dark mode chat interface. The data is presented as a line-separated list (not a table), with each entry on a new line. It's unstructured text, with tonnage categories followed by locations and percentages (e.g., "<2.5 T Mumbai, Pune -6.50x"). No headers; it's a bullet-less list. The message is from "Krunal Sir Probus" and includes a timestamp (11:32).
-- **Content Overview**: Titled "Grid Applicable for June 25", focused on "MH" (likely Maharashtra) with CV (Commercial Vehicle) categories by tonnage (e.g., <2.5 T, 2.5-3.5 T). Percentages are multipliers (e.g., -6.50x, -6.20x), possibly payout rates or adjustments. Locations: Mumbai, Pune, Nagpur. Includes "SATP" (Stand Alone Third Party) and age-based entries (>6 years).
-- **Detailed Breakdown**:
-  - "<2.5 T Mumbai, Pune -6.50x Nagpur -6.20x"
-  - "2.5-3.5 T Mumbai, Pune -5.30x"
-  - "3.5-12 T Mumbai, Pune -3.10x"
-  - "PCV 3W Mumbai, Pune -6.70x"
-  - ">3.5-45 T SATP Mumbai, Pune, Nagpur -4.60x"
-  - "12-45 T (>6 years) Mumbai, Pune -3.10x"
-  - "PO rate for MH - Tata" (possibly a header or note).
-  - The message is forwarded, with "Forwarded" label.
-- **Context and Implications**: This is a quick update on payout (PO) rates for commercial vehicles in Maharashtra for June 2025. Percentages are negative multipliers, suggesting deductions or rates (e.g., -6.50x might mean a 6.5% deduction scaled by x). Patterns: Rates decrease with higher tonnage, and locations have varying rates. "SATP" maps to TP as per your notes. For code, parse as key-value pairs from lines, mapping to "Segment" (tonnage as CV sub-type), "Location", "Payin" (percentage), "Remarks" (age like ">6 years").
-
-#### **Screenshot 3: Email about Private Car SATP Changes**
-- **Format/Structure**: Another formal email with a subject, body, and a table. The table is colored (green for "OPEN"), with 5 columns and 8 rows (1 header + 7 data rows). It's well-structured, likely from a word processor. Sign-off is simple ("Dear Sir").
-- **Content Overview**: Subject: "FW: Probus Insurance Broker, Approval for TW Scooter Mopped, Package and SATP". Body discusses implementing "highlighted changes" from June 5, 2025. Focus on "Private Car SATP" (Third Party) rates by fuel (Petrol, Diesel), for different states/RTO clusters. All guidelines are "OPEN" (possibly open for business).
-- **Detailed Breakdown**:
-  - **Header**: "State", "RTO Cluster", "Current Guidelines", "Petrol", "Diesel".
-  - **Row 1**: State: "GA", RTO Cluster: "GOA", Current: "OPEN", "OPEN", Petrol: "55%", Diesel: "45%".
-  - **Row 2**: "JH", "JHARKHAND", "OPEN", "OPEN", "50%", "50%".
-  - **Row 3**: "MH", "MUMBAI", "OPEN", "OPEN", "58%", "47%".
-  - **Row 4**: "MH", "NAGPUR", "OPEN", "OPEN", "45%", "45%".
-  - **Row 5**: "TN", "ANDAMAN", "OPEN", "OPEN", "50%", "45%".
-  - **Row 6**: "TS", "HYDERABAD", "OPEN", "OPEN", "46%", "45%".
-  - **Row 7**: "WB", "ROWB B", "OPEN", "OPEN", "55%", "50%".
-  - Body: "As discussed, please implement below highlighted changes from today(5th June 2025)."
-  - Forwarded from Bhavessh Mistry, with Cc to Rahul Bansal.
-- **Context and Implications**: This is a revision for Private Car Third Party rates, differentiated by fuel type and state/RTO. "OPEN" likely means the cluster is active for sales. Patterns: Petrol rates are higher than Diesel in most cases (e.g., 58% vs 47% for Mumbai). For code, extract as multiple records (one per row), mapping "State" to "Doable District" or "Location", "Petrol/Diesel" to "Payin" with fuel in "Remarks" (e.g., "Fuel Type: Petrol 58%; Diesel 47%").
-
-#### **Screenshot 4: WhatsApp Message about MH Grid for Aug 25**
-- **Format/Structure**: Forwarded WhatsApp message in dark mode, similar to Screenshot 2. Line-separated list, no table. Titled "MH Grid Applicable for Aug 25". Timestamp: 09:44.
-- **Content Overview**: Similar to June/July grids, but for August 2025. Focus on tonnage categories for CV, with locations and percentages. Includes SATP and age-based entries.
-- **Detailed Breakdown**:
-  - "<2.5 T Mumbai, Pune -60x Nagpur -60x"
-  - "2.5-3.5 T Mumbai, Pune -56x"
-  - "3.5-12 T Mumbai, Pune -35x"
-  - ">3.5-45 T SATP Mumbai, Pune, Nagpur -51x"
-  - "12-45 T (>6 years) Mumbai, Pune -35x"
-- **Context and Implications**: Update for August, with rates like -60x (higher deductions than June). Patterns: Consistent structure across months, with slight rate changes (e.g., -6.50x in June to -60x in Aug – possibly a notation change, e.g., -60% or -6.0x). For code, parse lines to "Segment" (tonnage), "Location", "Payin" (percentage), "Remarks" (age).
-
-#### **Screenshot 5: Email about School Bus Incentive**
-- **Format/Structure**: Formal email with a table (6 columns, 3 rows: header + 2 data). Table is highlighted in yellow for emphasis. Body text explains "exclusive Call" and notes.
-- **Content Overview**: Approval for Probus Insurance Brokers for FY 25-26, focused on "School bus >11 SC" incentives. YTD targets, quarterly rates, and distinctions for Institution vs Individual. Locations: "Pan India except ROTN, MP 1.2 & 3".
-- **Detailed Breakdown**:
-  - **Header**: "School bus >11 SC", "Pan India except ROTN, MP 1.2 & 3".
-  - Sub-headers: "YTD Target (in Cr)", "Additional-Yearly / qtry", "Institution", "Individual", "TATA <11 SC on all RTO's".
-  - **Row 1**: YTD: "<35", Yearly/qtry: "2.5%", Institution: "75.00%", Individual: "72.00%", TATA: "50%".
-  - **Row 2**: Highlighted: "ROTN-65%, MP1, MP2 & MP3 -67% <11 Seating 50% max"
-  - Note: "No additional deal applicable for ROTN and MP1, MP2 and MP3 RTO."
-  - Body: "Pls approve for Probus Insurance Brokers Private Limited for FY 25-26."
-  - Additional Bullet: "Below 11 seater will be part of over YTD target and will be counted for additional incentive as well."
-- **Context and Implications**: Incentive structure for school bus insurance, with targets in Cr (Crores) and rates for institution vs individual. "ROTN-65%" might be a special rate. Patterns: Tiered incentives, with max caps. For code, extract as records for "Institution" and "Individual", "Segment": "SCHOOL BUS", "Payin": percentages, "Remarks": notes and locations.
-
-#### **Screenshot 6: WhatsApp Message about MH Grid for July 25**
-- **Format/Structure**: Forwarded WhatsApp message, line-separated list, similar to previous grids. Timestamp: 17:05.
-- **Content Overview**: "MH Grid Applicable for July 25", CV tonnage rates for Maharashtra.
-- **Detailed Breakdown**:
-  - "<2.5 T Mumbai, Pune -68x Nagpur -65x"
-  - "2.5-3.5 T Mumbai, Pune -58x"
-  - "3.5-12 T Mumbai, Pune -35x"
-  - ">3.5-45 T SATP Mumbai, Pune, Nagpur -51x"
-  - "12-45 T (>6 years) Mumbai, Pune -35x"
-- **Context and Implications**: July update, rates between June and August (e.g., -68x for <2.5 T Mumbai). Patterns: Monthly revisions, decreasing deductions over time? For code, same parsing as other grids.
-
-#### **Screenshot 7: WhatsApp Message about Rajasthan CV SATP Revised Grid**
-- **Format/Structure**: Forwarded WhatsApp message, short list with 2 entries. Timestamp: 22:25.
-- **Content Overview**: "Dear Sir, Rajasthan CV SATP revised grid". RTO clusters with percentages.
-- **Detailed Breakdown**:
-  - "R13 RTO cluster 12 to 45T -26%"
-  - "R14 RTO cluster 12 to 35T -26%"
-  - Note: "Decrease by 3% From Tata"
-- **Context and Implications**: Revision for CV SATP in Rajasthan, focused on tonnage and RTO clusters. "Decrease by 3%" implies rate reduction. Patterns: Specific to state, tonnage-based. For code, map to "Segment": "All GVW & PCV 3W, GCV 3W", "Location": "R13, R14", "Payin": "-26%".
-
-#### **Screenshot 8: WhatsApp Message with UP Percentages and MCY TW SATP**
-- **Format/Structure**: WhatsApp message in dark mode, line-separated list. Timestamp: 15:36.
-- **Content Overview**: UP rates (UP1 to UP4) and "MCY TW SATP", with confirmation request.
-- **Detailed Breakdown**:
-  - "UP 1 38%"
-  - "UP 2 30%"
-  - "UP 3 30%"
-  - "Up4 38%"
-  - "MCY TW SATP"
-  - "pl confirm"
-  - Response: "Ok"
-- **Context and Implications**: UP (Uttar Pradesh?) rates for TW SATP (Two Wheeler TP). Patterns: Location-specific rates, with "MCY" as motorcycle. For code, map to "Segment": "TW TP", "Location": "UP1", "Payin": "38%", etc.
-
-#### **Screenshot 9: WhatsApp Chat Context**
-- **Format/Structure**: Chat history with messages, timestamps, and avatars. Not data-heavy, more conversational.
-- **Content Overview**: Discussion about meetings, policies, and API improvements. Mentions "10 days ma 1000 policies vadhi.. infact tw bike tp occhi thai chee" (Gujarati for "increased 1000 policies in 10 days, in fact TW bike TP has become less").
-- **Detailed Breakdown**:
-  - Messages: Scheduling meetings, "no today meeting scheduled", "overall no improved. its of API Only".
-  - No grid data; contextual chat.
-- **Context and Implications**: Background conversation, possibly about performance metrics. Not core data, but useful for date context (e.g., current discussions).
-
-Overall Patterns Across Screenshots:
-- **Data Types**: Mostly grids/lists of insurance rates by segment (CV tonnage, BUS seater, PVT CAR fuel), location (states/RTOs), and month (June-Aug 2025).
-- **Common Elements**: Percentages (positive/negative), locations (Mumbai, Pune, Nagpur, PAN India, states like MH, RJ, MP), fuel types, age/tonnage conditions.
-- **Variations**: Emails are tabular/formal, WhatsApp are list-based/informal. Negative percentages likely deductions, positive are payouts/incentives.
-- **Use for Code**: Your prompt should parse tables/lists into multiple records, handle negatives, extract fuel/age to Remarks, map SATP to TP, and infer LOB from context (e.g., "School bus" to BUS, "MCY" to TW).
-
-If you need more specifics or code adjustments based on this, let me know!
-
-### In-Depth Description of the Data in the Provided Screenshot
-
-This screenshot appears to be a formal email or document (likely from an insurance approval process) requesting approval for incentive structures related to school bus insurance for the financial year (FY) 25-26. It's focused on Probus Insurance Brokers Private Limited. I'll break it down comprehensively, similar to my previous analysis, covering the overall structure, content, detailed elements, and implications. The data is tabular with supporting text, emphasizing targets, rates, and exceptions.
-
-#### **Format/Structure**
-- **Overall Layout**: This is a semi-formal email or approval document, likely created in Microsoft Word or Outlook and shared as an image/PDF. It starts with a greeting ("Dear Sir,"), followed by a request paragraph, a table, a highlighted note, and a bullet point. The table is the core data element, with 5 columns and 2 rows (1 header + 1 data row), plus a sub-note. The layout is clean but has some formatting artifacts (e.g., repeated text like "School bus >11 SC" due to possible OCR extraction or image compression). There's a smiley emoji at the end, suggesting it was copied from a chat or email with casual elements. The document is vertical, with the table spanning the width.
-- **Table Structure**: 
-  - **Columns**: 5 (merged in places for readability).
-  - **Rows**: 1 header row + 1 data row + 1 highlighted sub-row/note.
-  - **Styling**: The sub-note is highlighted in yellow, indicating emphasis. Percentages are formatted with decimals (e.g., "75.00%"). Text is bolded for headers and key notes.
-- **Length and Density**: Compact (fits one screen), but dense with financial terms. No images or attachments visible; it's text-heavy.
-
-#### **Content Overview**
-- **Theme**: This is an incentive and target approval request for school bus insurance sales, specifically for buses with more than 11 seats ("School bus >11 SC"). It covers FY 25-26 (April 2025–March 2026) and includes Year-to-Date (YTD) targets in crores (₹ Cr), quarterly/yearly additional incentives, and differentiated rates for "Institution" (e.g., schools) vs. "Individual" (private buyers), plus a special rate for TATA vehicles. The focus is on "Pan India except ROTN, MP1 & 2 & 3" (nationwide except specific RTO regions in Madhya Pradesh). Key numbers are percentages (e.g., 75.00%, 72.00%) representing incentive rates, with caps and exceptions. The document emphasizes no additional deals in certain regions and counts smaller buses toward overall targets.
-- **Key Entities**:
-  - **Company/Broker**: Probus Insurance Brokers Private Limited.
-  - **Product/Lob**: School Bus (>11 SC), likely under BUS LOB in your formula data.
-  - **Rates/Incentives**: Percentages for institutions/individuals (75-72%), TATA special (50%), with caps like "<11 Seating 50% max".
-  - **Locations/Exclusions**: Pan India, excluding ROTN (possibly "Rest of Tamil Nadu" or a specific RTO code) and MP1, MP2, MP3 (Madhya Pradesh RTO clusters).
-  - **Dates**: FY 25-26; targets are ">35 Cr" (more than 35 crores).
-
-#### **Detailed Breakdown**
-- **Greeting and Request Paragraph**:
-  - "Dear Sir," (standard formal greeting).
-  - "Pls approve for Probus Insurance Brokers Private Limited for FY 25-26." (Core request for approval of the incentive structure).
-  - Repeated text ("Pls approve... for FY 25-26.") – likely a duplication from OCR or copy-paste error in the image.
-
-- **Table**:
-  - **Header Row** (merged columns):
-    - Left: "School bus >11 SC" (Segment/Lob identifier).
-    - Right (merged): "Pan India except ROTN, MP1 & 2 & 3" (Location/Scope).
-  - **Sub-Headers** (under the right merged cell):
-    - "YTD Target (in Cr)", ">35" (target: more than 35 crores for the year).
-    - "Additional-Yearly / qtry" (quarterly/yearly incentives), value: "2.5%" (2.5% on quarterly sales).
-    - "Institution" (for institutional buyers like schools), value: "75.00%" (75% incentive rate).
-    - "Individual" (for private buyers), value: "72.00%" (72% incentive rate).
-    - "TATA <11 SC on all RTO's" (special rate for TATA vehicles under 11 seats, across all Regional Transport Offices), value: "50%" (50% rate).
-  - **Highlighted Sub-Row/Note** (yellow background, under the table):
-    - "* ROTN-65%, MP1, MP2 & MP3 -67%" (Asterisk for footnote; reduced rates: 65% for ROTN, 67% for MP clusters – likely for institutions/individuals).
-    - "MP1, MP2 & MP3 -67%, <11 Seating 50% max" (Cap for smaller buses: max 50% incentive in MP regions).
-    - "No additional deal applicable for ROTN and MP1, MP2 and MP3 RTO." (Exclusion: No extra incentives in these regions).
-
-- **Bullet Point**:
-  - "• Below 11 seater will be part of over YTD target and will be counted for additional incentive as well." (Note: Smaller buses (<11 seats) contribute to the overall target and qualify for incentives, despite the cap).
-
-- **Footer/Contextual Elements**:
-  - Repeated table snippets (e.g., "School bus >11 SC") – likely image artifacts.
-  - Emoji (😊) at the end – suggests this was shared in a chat or email with a friendly tone.
-
-#### **Context and Implications**
-- **Business Context**: This is an internal approval document for sales incentives in the school bus insurance segment (likely under "BUS" LOB in your formula data, mapping to "SCHOOL BUS" segment). It's aimed at brokers like Probus to meet FY targets through higher incentives for larger vehicles (>11 seats). The structure encourages volume sales (YTD >35 Cr) with tiered rates: higher for institutions (75%) than individuals (72%), and lower for TATA small vehicles (50%). Exclusions in specific RTOs (ROTN, MP clusters) prevent over-incentivization in low-margin areas. The "2.5%" is a quarterly bonus on top of base rates.
-- **Data Patterns**:
-  - **Numerical**: Targets in Cr (₹), rates as percentages (75.00%, 72.00%, 50%, 65%, 67%). All positive, indicating incentives (not deductions like in CV grids).
-  - **Hierarchical**: Targets → Quarterly bonuses → Buyer-type rates → Caps/Exclusions.
-  - **Geographic**: Pan India with exclusions (ROTN, MP1-3), implying regional variations.
-  - **Conditional**: ">11 SC" (seats), "<11 Seating 50% max", "irrespective of Institution/non Institution" (from previous screenshots, but similar here).
-- **Implications for Processing**:
-  - **Extraction**: Parse the table as one primary record for "SCHOOL BUS", with sub-details in "Remarks" (e.g., "Institution: 75.00%; Individual: 72.00%; TATA <11 SC: 50%; ROTN: 65%; MP1-3: 67%; Cap: <11 Seating 50% max; No additional deal in ROTN/MP; Below 11 seater counts toward YTD target").
-  - **Mapping to Your System**:
-    - **Segment**: "SCHOOL BUS" (direct match).
-    - **Payin**: Use the highest rate (75.00%) or average (72.50%), but since it's incentives, treat as "Payin" for calculation; include variants in Remarks.
-    - **Location**: "Pan India except ROTN, MP1, MP2, MP3".
-    - **Doable District**: "MP1, MP2, MP3" (as exclusions).
-    - **Remarks**: Age/condition: N/A; Fuel: N/A; Notes: "YTD Target >35 Cr; Quarterly 2.5%; Below 11 seater counts for additional incentive".
-  - **Potential Issues**: Repeated text could confuse OCR; yellow highlight might be lost in extraction – prompt should ignore styling.
-  - **Business Insight**: This incentivizes large-volume school bus sales (institutional focus), with safeguards in specific regions. Total potential: If target is >35 Cr at 72% average rate, incentives could be ~25 Cr payout.
-
-This screenshot fits the pattern of incentive approvals, contrasting with rate grids in other images (deductions vs. bonuses). If you need a code update to handle this specific format or extract it as multiple records (e.g., one per rate type), let me know!
-Text to analyze:
-{extracted_text}
-
-"""
-        try:
-            response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {
-                        "role": "system", 
-                        "content": "You are a data extraction expert. Extract policy data as a JSON array. Convert all Payin values to percentage format. Always return valid JSON array with complete field names. Extract all additional information for remarks."
-                    },
-                    {"role": "user", "content": parse_prompt}
-                ],
-                temperature=0.0,
-                max_tokens=4000
-            )
-            
-            parsed_json = response.choices[0].message.content.strip()
-            logger.info(f"Raw parsing response length: {len(parsed_json)}")
-            
-            cleaned_json = clean_json_response(parsed_json)
-            logger.info(f"Cleaned JSON length: {len(cleaned_json)}")
-            
-            try:
-                policy_data = json.loads(cleaned_json)
-                policy_data = ensure_list_format(policy_data)
-                
-                if not policy_data or len(policy_data) == 0:
-                    raise ValueError("Parsed data is empty")
-                    
-            except json.JSONDecodeError as e:
-                logger.error(f"JSON decode error: {str(e)} with cleaned JSON: {cleaned_json[:500]}...")
-                raise ValueError(f"JSON parsing failed: {str(e)}")
+        if not extracted_text or extracted_text == "[]":
+            raise ValueError("No text extracted from image")
         
-        except Exception as e:
-            logger.error(f"Error in AI parsing: {str(e)}")
-            raise ValueError(f"AI parsing failed: {str(e)}")
-
-        logger.info(f"✅ Successfully parsed {len(policy_data)} policy records")
-
-        # Classify payin
-        logger.info("🧮 Classifying payin values...")
-        for record in policy_data:
-            try:
-                if 'Discount' in record:
-                    del record['Discount']
-                payin_val, payin_cat = classify_payin(record.get('Payin', '0%'))
-                record['Payin_Value'] = payin_val
-                record['Payin_Category'] = payin_cat
-            except Exception as e:
-                logger.warning(f"Error classifying payin: {e}")
-                record['Payin_Value'] = 0.0
-                record['Payin_Category'] = "Payin Below 20%"
-
-        # Apply formulas
-        logger.info("🧮 Applying formulas and calculating payouts...")
-        calculated_data = apply_formula_directly(policy_data, company_name)
+        # Parse JSON
+        policy_data = json.loads(extracted_text)
+        if isinstance(policy_data, dict):
+            policy_data = [policy_data]
         
-        if not calculated_data or len(calculated_data) == 0:
-            logger.error("No data after formula application")
+        if not policy_data:
+            raise ValueError("No policy data found")
+        
+        logger.info(f"Parsed {len(policy_data)} records")
+        
+        # Apply formulas (classification now inside)
+        calculated_data = apply_formula(policy_data)
+        
+        if not calculated_data:
             raise ValueError("No data after formula application")
-
-        logger.info(f"✅ Successfully calculated {len(calculated_data)} records")
-
-        # Create Excel
-        logger.info("📊 Creating Excel file...")
-        df_calc = pd.DataFrame(calculated_data)
         
-        if df_calc.empty:
-            logger.error("DataFrame is empty")
-            raise ValueError("DataFrame is empty")
-
+        logger.info(f"Calculated {len(calculated_data)} records")
+        
+        # Create Excel
+        df = pd.DataFrame(calculated_data)
         output = BytesIO()
-        try:
-            with pd.ExcelWriter(output, engine='openpyxl') as writer:
-                df_calc.to_excel(writer, sheet_name='Policy Data', startrow=2, index=False)
-                worksheet = writer.sheets['Policy Data']
-                headers = list(df_calc.columns)
-                for col_num, value in enumerate(headers, 1):
-                    cell = worksheet.cell(row=3, column=col_num, value=value)
-                    cell.font = cell.font.copy(bold=True)
-                if len(headers) > 1:
-                    company_cell = worksheet.cell(row=1, column=1, value=company_name)
-                    worksheet.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(headers))
-                    company_cell.font = company_cell.font.copy(bold=True, size=14)
-                    company_cell.alignment = company_cell.alignment.copy(horizontal='center')
-                    title_cell = worksheet.cell(row=2, column=1, value='Policy Data with Payin and Calculated Payouts')
-                    worksheet.merge_cells(start_row=2, start_column=1, end_row=2, end_column=len(headers))
-                    title_cell.font = title_cell.font.copy(bold=True, size=12)
-                    title_cell.alignment = title_cell.alignment.copy(horizontal='center')
-                else:
-                    worksheet.cell(row=1, column=1, value=company_name)
-                    worksheet.cell(row=2, column=1, value='Policy Data with Payin and Calculated Payouts')
-
-        except Exception as e:
-            logger.error(f"Error creating Excel file: {str(e)}")
-            raise ValueError(f"Error creating Excel: {str(e)}")
-
+        
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name='Policy Data', startrow=2, index=False)
+            worksheet = writer.sheets['Policy Data']
+            
+            # Format headers
+            for col_num, value in enumerate(df.columns, 1):
+                cell = worksheet.cell(row=3, column=col_num, value=value)
+                cell.font = cell.font.copy(bold=True)
+            
+            # Add title
+            title_cell = worksheet.cell(row=1, column=1, value=f"{company_name} - Policy Data")
+            worksheet.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(df.columns))
+            title_cell.font = title_cell.font.copy(bold=True, size=14)
+            title_cell.alignment = title_cell.alignment.copy(horizontal='center')
+        
         output.seek(0)
-        excel_data = output.read()
-        excel_data_base64 = base64.b64encode(excel_data).decode('utf-8')
-
+        excel_data_base64 = base64.b64encode(output.read()).decode('utf-8')
+        
         # Calculate metrics
-        avg_payin = sum([r.get('Payin_Value', 0) for r in calculated_data]) / len(calculated_data) if calculated_data else 0.0
-        unique_segments = len(set([r.get('Segment', 'N/A') for r in calculated_data]))
+        avg_payin = sum([float(r['payin'].strip('%')) for r in calculated_data if r['payin'] != 'Error']) / len(calculated_data) if calculated_data else 0
         formula_summary = {}
         for record in calculated_data:
-            formula = record.get('Formula Used', 'Unknown')
+            formula = record['Formula Used']
             formula_summary[formula] = formula_summary.get(formula, 0) + 1
-
-        logger.info("✅ Processing completed successfully")
-        logger.info("=" * 50)
         
         return {
             "extracted_text": extracted_text,
             "parsed_data": policy_data,
             "calculated_data": calculated_data,
             "excel_data": excel_data_base64,
-            "csv_data": df_calc.to_csv(index=False),
+            "csv_data": df.to_csv(index=False),
             "json_data": json.dumps(calculated_data, indent=2),
             "formula_data": FORMULA_DATA,
             "metrics": {
                 "total_records": len(calculated_data),
                 "avg_payin": round(avg_payin, 1),
-                "unique_segments": unique_segments,
+                "unique_segments": len(set([r['segment'] for r in calculated_data])),
                 "company_name": company_name,
                 "formula_summary": formula_summary
             }
         }
-
+    
     except Exception as e:
-        logger.error(f"Unexpected error in process_files: {str(e)}", exc_info=True)
+        logger.error(f"Error in process_files: {str(e)}", exc_info=True)
         raise
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
-    """Serve a basic HTML frontend or instructions"""
-    try:
-        html_path = Path("index.html")
-        if html_path.exists():
-            with open(html_path, "r", encoding="utf-8") as f:
-                html_content = f.read()
-            return HTMLResponse(content=html_content)
-        else:
-            html_content = """
-            <h1>Insurance Policy Processing System</h1>
-            <p>Welcome to the Insurance Policy Processing API.</p>
-            <h2>Usage Instructions:</h2>
-            <ul>
-                <li><b>Endpoint:</b> POST /process</li>
-                <li><b>Parameters:</b>
-                    <ul>
-                        <li><b>company_name</b>: String (form-data, required)</li>
-                        <li><b>policy_file</b>: Image file (PNG, JPG, JPEG, GIF, BMP, TIFF; file upload, required)</li>
-                    </ul>
-                </li>
-                <li><b>Response:</b> JSON object containing extracted text, parsed data, calculated data, Excel/CSV/JSON files, and metrics.</li>
-                <li><b>Health Check:</b> GET /health</li>
-            </ul>
-            <h2>Features:</h2>
-            <ul>
-                <li>AI-powered OCR using GPT-4o for text extraction</li>
-                <li>Structured data parsing with detailed remarks</li>
-                <li>Payout calculations based on embedded formula rules</li>
-                <li>Downloadable Excel, CSV, and JSON outputs</li>
-            </ul>
-            """
-            return HTMLResponse(content=html_content)
-    except Exception as e:
-        logger.error(f"Error serving HTML: {str(e)}")
-        return HTMLResponse(content=f"<h1>Error loading page</h1><p>{str(e)}</p>", status_code=500)
+    """Serve HTML frontend"""
+    html_path = Path("index.html")
+    if html_path.exists():
+        return HTMLResponse(content=html_path.read_text(encoding="utf-8"))
+    return HTMLResponse(content="<h1>Insurance Policy Processing System</h1><p>Upload via POST /process</p>")
 
 @app.post("/process")
 async def process_policy(company_name: str = Form(...), policy_file: UploadFile = File(...)):
-    """Process policy image and return extracted and calculated data"""
+    """Process policy image"""
     try:
-        logger.info("=" * 50)
-        logger.info(f"📨 Received request for company: {company_name}")
-        logger.info(f"📄 File: {policy_file.filename}, Content-Type: {policy_file.content_type}")
-        
-        # Read file
         policy_file_bytes = await policy_file.read()
-        if len(policy_file_bytes) == 0:
-            logger.error("Uploaded file is empty")
-            return JSONResponse(
-                status_code=400,
-                content={"error": "Uploaded file is empty"}
-            )
-
-        logger.info(f"📦 File size: {len(policy_file_bytes)} bytes")
+        if not policy_file_bytes:
+            return JSONResponse(status_code=400, content={"error": "Empty file"})
         
-        # Process
-        results = process_files(
-            policy_file_bytes, 
-            policy_file.filename, 
-            policy_file.content_type,
-            company_name
-        )
-        
-        logger.info("✅ Returning results to client")
+        results = process_files(policy_file_bytes, policy_file.filename, policy_file.content_type, company_name)
         return JSONResponse(content=results)
         
     except ValueError as e:
-        logger.error(f"Validation error: {str(e)}")
-        return JSONResponse(
-            status_code=400,
-            content={"error": str(e)}
-        )
+        return JSONResponse(status_code=400, content={"error": str(e)})
     except Exception as e:
-        logger.error(f"Error processing request: {str(e)}", exc_info=True)
-        return JSONResponse(
-            status_code=500,
-            content={"error": f"Processing failed: {str(e)}"}
-        )
+        logger.error(f"Error: {str(e)}", exc_info=True)
+        return JSONResponse(status_code=500, content={"error": f"Processing failed: {str(e)}"})
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint"""
-    return JSONResponse(content={"status": "healthy", "message": "Server is running"})
+    """Health check"""
+    return JSONResponse(content={"status": "healthy"})
 
 if __name__ == "__main__":
     import uvicorn
-    logger.info("🚀 Starting Insurance Policy Processing System...")
-    logger.info("📡 Server will be available at: http://localhost:8000")
-    logger.info("🔑 OpenAI API Key is configured: ✅")
+    logger.info("Starting server at http://localhost:8000")
     uvicorn.run(app, host="0.0.0.0", port=8000)
